@@ -1,5 +1,6 @@
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
+use tauri_specta::{collect_commands, Builder as SpectaBuilder};
 
 pub mod audio;
 pub mod commands;
@@ -13,7 +14,21 @@ pub mod terminal;
 pub mod transcription;
 
 pub fn run() {
+    let specta_builder = SpectaBuilder::<tauri::Wry>::new().commands(collect_commands![
+        commands::projects::list_projects,
+        commands::projects::get_project,
+        commands::projects::create_project,
+        commands::projects::update_project,
+        commands::projects::delete_project,
+    ]);
+
+    #[cfg(debug_assertions)]
+    specta_builder
+        .export(specta_typescript::Typescript::default(), "../src/ipc/bindings.ts")
+        .expect("falha ao exportar bindings TypeScript");
+
     tauri::Builder::default()
+        .invoke_handler(specta_builder.invoke_handler())
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.unminimize();
@@ -49,6 +64,16 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
         ))
+        .setup(move |app| {
+            specta_builder.mount_events(app);
+
+            let app_data_dir = app.path().app_data_dir().expect("sem app_data_dir resolvido");
+            let pool = storage::init_pool(&app_data_dir).expect("falha ao inicializar o banco");
+            app.manage(storage::ProjectRepo::new(pool.clone()));
+            app.manage(storage::HistoryRepo::new(pool));
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

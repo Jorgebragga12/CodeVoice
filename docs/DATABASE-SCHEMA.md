@@ -1,7 +1,7 @@
 # CodeVoice — DATABASE-SCHEMA
 
 > Versão 0.1 · Fase 0 · 22/07/2026
-> SQLite via `rusqlite` (bundled), acesso exclusivo no lado Rust (ADR-003). Banco em `%APPDATA%/CodeVoice/codevoice.db`, WAL mode, `foreign_keys = ON`.
+> SQLite via `rusqlite` (bundled), acesso exclusivo no lado Rust (ADR-003). Banco em `%APPDATA%/com.jorgebraga.codevoice/codevoice.db`, WAL mode, `foreign_keys = ON`.
 
 ## 1. Convenções
 
@@ -139,14 +139,16 @@ CREATE TABLE app_settings (
 
 ```sql
 CREATE VIRTUAL TABLE history_fts USING fts5(
-  transcript, prompt, content='',            -- external content, alimentada por triggers
-  tokenize='unicode61 remove_diacritics 2'   -- busca sem acentos (PT)
+  transcript,
+  prompt,
+  history_id UNINDEXED,                      -- id de prompt_history, pra fazer o join na busca
+  tokenize = 'unicode61 remove_diacritics 2'  -- busca sem acentos (PT)
 );
--- Triggers de sincronização em transcriptions/generated_prompts → history_fts
--- (INSERT/UPDATE/DELETE), mapeando rowid = prompt_history.id
 ```
 
-A pesquisa do Histórico usa `history_fts MATCH ?` combinada com filtros `project_id`/`mode`/`favorite` na `prompt_history`.
+**Revisão da Fase 2**: o design original desta seção previa uma FTS5 "external content" (`content=''`) alimentada por triggers SQL em `transcriptions`/`generated_prompts`. Isso foi abandonado na implementação: o texto buscável vem de duas tabelas diferentes que não compartilham rowid com `prompt_history`, o que tornaria os triggers frágeis. Em vez disso, `history_fts` é uma tabela independente, **populada explicitamente pelo código Rust** (`HistoryRepo::save_flow`, na mesma transação que grava `prompt_history`) — não por triggers.
+
+A pesquisa do Histórico usa `history_fts MATCH ?` com join em `history_id`, combinado com filtros `project_id`/`mode`/`favorite` na `prompt_history`. Sanitização de caracteres especiais da query FTS5 fica para a Fase 8 (tela real de busca).
 
 ## 5. Regras de integridade no código
 

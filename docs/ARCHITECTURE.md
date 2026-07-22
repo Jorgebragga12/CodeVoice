@@ -6,7 +6,7 @@
 ## 0. Identidade do app
 
 - **Nome definitivo**: CodeVoice (confirmado pelo Jorge em 22/07/2026 — não é mais provisório).
-- **Bundle identifier** (Tauri `tauri.conf.json` → `identifier`): `com.jorgebraga.codevoice`. Usado também para o diretório de dados (`%APPDATA%/CodeVoice/`, nome de exibição livre) e para o registro do instalador Windows. Definir na Fase 1; trocar depois exige migração de dados do usuário.
+- **Bundle identifier** (Tauri `tauri.conf.json` → `identifier`): `com.jorgebraga.codevoice`. Usado também para o diretório de dados (`%APPDATA%/com.jorgebraga.codevoice/`, nome de exibição livre) e para o registro do instalador Windows. Definir na Fase 1; trocar depois exige migração de dados do usuário.
 - **Repositório**: GitHub, conta pessoal **Jorgebragga12** (não a conta de trabalho Inconformedia). Criar/pushar o remoto é uma ação de rede que só será executada mediante pedido explícito do Jorge.
 
 ## 1. Stack validada
@@ -166,7 +166,7 @@ Commands anotados geram bindings TS; elimina drift de tipos entre Rust e TS. **S
 ## 8. Tratamento de erros e logs
 
 - Erros Rust: `thiserror` por módulo (a partir da Fase 2, quando os primeiros commands com `Result` existirem), convertidos em um tipo `AppError { code, message_pt, detail }` serializável na borda IPC. Frontend mostra `message_pt` e oferece ação (repetir, abrir configurações…).
-- Logs: `tauri-plugin-log` (facade `log`, não `tracing` — decisão da Fase 1: o plugin já opera sobre `log::Record` por padrão, sem precisar da feature `tracing`; revisitar apenas se surgir necessidade real de spans estruturados) → stdout em dev + arquivo com rotação em `%APPDATA%/CodeVoice/logs/`. **Todo log passa pelo formatter customizado que aplica `security::log_filter::redact()`** (ver SECURITY-MODEL.md §4), implementado e testado na Fase 1. Nível configurável; padrão `info`.
+- Logs: `tauri-plugin-log` (facade `log`, não `tracing` — decisão da Fase 1: o plugin já opera sobre `log::Record` por padrão, sem precisar da feature `tracing`; revisitar apenas se surgir necessidade real de spans estruturados) → stdout em dev + arquivo com rotação em `%APPDATA%/com.jorgebraga.codevoice/logs/`. **Todo log passa pelo formatter customizado que aplica `security::log_filter::redact()`** (ver SECURITY-MODEL.md §4), implementado e testado na Fase 1. Nível configurável; padrão `info`.
 - Error boundary React global (implementado na Fase 1, `src/app/ErrorBoundary.tsx`) + handler de panics Rust que loga e mostra diálogo (panic hook fica para quando houver diálogo de erro nativo, Fase 10).
 
 ## 9. O que NÃO fazer (anti-requisitos para os implementadores)

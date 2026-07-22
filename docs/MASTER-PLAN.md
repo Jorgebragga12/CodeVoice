@@ -9,7 +9,7 @@
 | ---- | ---------------------- | ---------- | ----------------------------------------- |
 | 0    | Fundação (docs)        | —          | ✅ concluída (este repositório)           |
 | 1    | Scaffold e qualidade   | 0          | ✅ concluída — ver PHASE-01-REPORT.md     |
-| 2    | Banco e storage        | 1          | migrations + repositórios + testes        |
+| 2    | Banco e storage        | 1          | ✅ concluída — ver PHASE-02-REPORT.md     |
 | 3    | Cadastro de projetos   | 2          | CRUD + importação assistida segura        |
 | 4    | Gravação de áudio      | 1          | gravar/cancelar por atalho global         |
 | 5    | Transcrição Whisper    | 4          | áudio PT real transcrito com progresso    |
@@ -51,9 +51,11 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 **Escopo**: `rusqlite` bundled; `storage/` com pool, migrations 001 e 002 (DATABASE-SCHEMA.md §3–4), repositórios (`ProjectRepo`, `HistoryRepo`, `SettingsRepo`…); commands CRUD mínimos expostos com tauri-specta; testes de migration (do zero e incremental) e de repositório (em `:memory:` ou arquivo temp).
 **Critérios de aceite**:
 
-- [ ] App cria `%APPDATA%/CodeVoice/codevoice.db` com todas as tabelas na 1ª execução
-- [ ] Testes: aplicar migrations do zero; CRUD de projects; FTS insere/pesquisa; transação `save_flow` atômica
-- [ ] Bindings TS gerados e usados por uma tela de debug simples
+- [x] App cria `%APPDATA%/com.jorgebraga.codevoice/codevoice.db` com todas as tabelas na 1ª execução
+- [x] Testes: aplicar migrations do zero; CRUD de projects; FTS insere/pesquisa; transação `save_flow` atômica
+- [x] Bindings TS gerados e usados por uma tela de debug simples
+
+✅ **Concluída em 22/07/2026** — detalhes em [PHASE-02-REPORT.md](PHASE-02-REPORT.md).
 
 ### Fase 3 — Cadastro de projetos
 
@@ -66,7 +68,7 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 
 ### Fase 4 — Gravação de áudio
 
-**Escopo**: `audio/` com cpal (listar dispositivos, capturar 16 kHz mono) + hound (WAV em `%APPDATA%/CodeVoice/tmp/`); atalho global configurável (tauri-plugin-global-shortcut) com captura de conflito; janela recorder (always-on-top, frameless) com indicador + contador + projeto ativo; `Esc` cancela; limite 10 min; exclusão automática do WAV pós-processamento + limpeza de órfãos no startup; metadados em `recordings`.
+**Escopo**: `audio/` com cpal (listar dispositivos, capturar 16 kHz mono) + hound (WAV em `%APPDATA%/com.jorgebraga.codevoice/tmp/`); atalho global configurável (tauri-plugin-global-shortcut) com captura de conflito; janela recorder (always-on-top, frameless) com indicador + contador + projeto ativo; `Esc` cancela; limite 10 min; exclusão automática do WAV pós-processamento + limpeza de órfãos no startup; metadados em `recordings`.
 **Critérios de aceite**:
 
 - [ ] Com app minimizado na bandeja: atalho abre recorder < 300 ms, grava, atalho encerra
@@ -76,7 +78,7 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 
 ### Fase 5 — Transcrição Whisper
 
-**Escopo**: `transcription/` com trait + impl whisper-rs; `model_manager.rs` (download HTTPS com progresso + SHA-256, diretório `%APPDATA%/CodeVoice/models/`); seleção de modelo nas configurações (**large-v3-turbo padrão, confirmado — ADR-001**; medium/small como alternativas para hardware fraco); transcrição com `language=pt` + initial_prompt com glossário técnico (nomes de arquivos, comandos, tecnologias do projeto ativo); eventos de progresso; erros: silêncio (RMS abaixo de limiar), modelo ausente, áudio inválido, falha.
+**Escopo**: `transcription/` com trait + impl whisper-rs; `model_manager.rs` (download HTTPS com progresso + SHA-256, diretório `%APPDATA%/com.jorgebraga.codevoice/models/`); seleção de modelo nas configurações (**large-v3-turbo padrão, confirmado — ADR-001**; medium/small como alternativas para hardware fraco); transcrição com `language=pt` + initial_prompt com glossário técnico (nomes de arquivos, comandos, tecnologias do projeto ativo); eventos de progresso; erros: silêncio (RMS abaixo de limiar), modelo ausente, áudio inválido, falha.
 **Spike no início da fase**: benchmark de large-v3-turbo (e opcionalmente medium/small) com áudio PT real na máquina do Jorge (tempo + qualidade), registrado no relatório — **não decide mais o modelo padrão** (já travado), serve para validar desempenho aceitável e decidir se medium/small valem a pena oferecer como opção.
 **Critérios de aceite**:
 
