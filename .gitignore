@@ -1,0 +1,32 @@
+# Node
+node_modules/
+dist/
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Modelos Whisper e áudio (nunca versionar)
+models/
+*.bin
+*.gguf
+*.wav
+*.mp3
+
+# Banco local e logs
+*.db
+*.db-wal
+*.db-shm
+logs/
+
+# Ambiente e secrets
+.env
+.env.*
+*.pem
+*.key
+
+# IDE / SO
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
