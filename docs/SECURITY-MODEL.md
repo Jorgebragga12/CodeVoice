@@ -12,18 +12,18 @@
 
 ## 2. Superfícies de ameaça e mitigações
 
-| Superfície | Ameaça | Mitigação |
-|---|---|---|
-| Scanner de projetos | Ler/armazenar secrets (.env, chaves) | Denylist absoluta (§3) + autorização explícita por projeto + preview do que será importado |
-| Caminho do projeto | Path traversal (`..\`, symlinks, UNC) | Canonicalização (`dunce::canonicalize`) + rejeição de caminhos fora do diretório declarado + rejeição de `\\?\` truques e devices (`CON`, `NUL`…) |
-| Spawn de terminal / claude CLI | Injeção de argumentos | Texto do usuário nunca em argv: sempre stdin ou clipboard; spawn com lista de args fixa (`CreateProcess` sem shell interpretando string); working dir validado |
-| Prompt gerado colado no terminal | Usuário colar comando malicioso ditado por engano | Colar somente sob ação explícita (ADR-005); nunca enviar Enter automaticamente |
-| Logs | Vazamento de secrets | Filtro no logger (§4); nunca logar conteúdo de transcrição/prompt em nível `info` |
-| Áudio temporário | Retenção indevida de voz | WAV em `%APPDATA%/CodeVoice/tmp/`, excluído após processamento; opção "manter" off por padrão; limpeza de órfãos no startup |
-| Banco SQLite | SQL injection | Somente prepared statements (rusqlite); FTS5 com parâmetro bind |
-| Download de modelo Whisper | Modelo adulterado / MITM | HTTPS + verificação SHA-256 contra hash embutido no binário |
-| Settings sensíveis (futuras chaves de API) | Armazenamento em texto plano | `keyring` → Windows Credential Manager; nunca no SQLite/store/JSON |
-| Claude Code | Bypass de confirmações | Proibido usar `--dangerously-skip-permissions` ou equivalentes; proibido executar comandos destrutivos automaticamente |
+| Superfície                                 | Ameaça                                            | Mitigação                                                                                                                                                      |
+| ------------------------------------------ | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scanner de projetos                        | Ler/armazenar secrets (.env, chaves)              | Denylist absoluta (§3) + autorização explícita por projeto + preview do que será importado                                                                     |
+| Caminho do projeto                         | Path traversal (`..\`, symlinks, UNC)             | Canonicalização (`dunce::canonicalize`) + rejeição de caminhos fora do diretório declarado + rejeição de `\\?\` truques e devices (`CON`, `NUL`…)              |
+| Spawn de terminal / claude CLI             | Injeção de argumentos                             | Texto do usuário nunca em argv: sempre stdin ou clipboard; spawn com lista de args fixa (`CreateProcess` sem shell interpretando string); working dir validado |
+| Prompt gerado colado no terminal           | Usuário colar comando malicioso ditado por engano | Colar somente sob ação explícita (ADR-005); nunca enviar Enter automaticamente                                                                                 |
+| Logs                                       | Vazamento de secrets                              | Filtro no logger (§4); nunca logar conteúdo de transcrição/prompt em nível `info`                                                                              |
+| Áudio temporário                           | Retenção indevida de voz                          | WAV em `%APPDATA%/CodeVoice/tmp/`, excluído após processamento; opção "manter" off por padrão; limpeza de órfãos no startup                                    |
+| Banco SQLite                               | SQL injection                                     | Somente prepared statements (rusqlite); FTS5 com parâmetro bind                                                                                                |
+| Download de modelo Whisper                 | Modelo adulterado / MITM                          | HTTPS + verificação SHA-256 contra hash embutido no binário                                                                                                    |
+| Settings sensíveis (futuras chaves de API) | Armazenamento em texto plano                      | `keyring` → Windows Credential Manager; nunca no SQLite/store/JSON                                                                                             |
+| Claude Code                                | Bypass de confirmações                            | Proibido usar `--dangerously-skip-permissions` ou equivalentes; proibido executar comandos destrutivos automaticamente                                         |
 
 ## 3. Denylist do scanner de projetos (absoluta)
 

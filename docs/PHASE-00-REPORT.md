@@ -4,13 +4,13 @@
 
 ## 1. Ambiente verificado
 
-| Item | Resultado |
-|---|---|
-| SO | Windows 11 Pro 10.0.22631 |
-| Node / npm | v24.14.1 / 11.11.0 ✅ (Tauri 2 requer Node ≥18) |
-| Rust / cargo | 1.97.0 / 1.97.0 ✅ (Tauri 2 requer ≥1.77) |
-| `claude` CLI | presente em `~\.local\bin\claude.exe` ✅ (viabiliza ADR-002) |
-| WebView2 | nativo no Windows 11 ✅ |
+| Item             | Resultado                                                                                       |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| SO               | Windows 11 Pro 10.0.22631                                                                       |
+| Node / npm       | v24.14.1 / 11.11.0 ✅ (Tauri 2 requer Node ≥18)                                                 |
+| Rust / cargo     | 1.97.0 / 1.97.0 ✅ (Tauri 2 requer ≥1.77)                                                       |
+| `claude` CLI     | presente em `~\.local\bin\claude.exe` ✅ (viabiliza ADR-002)                                    |
+| WebView2         | nativo no Windows 11 ✅                                                                         |
 | Pasta do projeto | `C:\Users\Jorge Braga\Documents\CLAUDETE\CodeVoice` — estava vazia; git inicializado nesta fase |
 
 Atenção para implementadores: o caminho do projeto contém **espaço** ("Jorge Braga") — sempre citar paths em comandos.
@@ -38,25 +38,27 @@ Decisões fechadas sem pendência desde o início: ADR-003 (rusqlite só no Rust
 ## 4. Dependências sugeridas (a instalar na Fase 1+, com justificativa)
 
 **Rust (crates)**
-| Crate | Fase | Justificativa |
-|---|---|---|
-| `tauri` 2.x + plugins: `global-shortcut`, `autostart`, `clipboard-manager`, `single-instance`, `store`, `log`, `opener`, `shell` | 1 | shell do app e recursos nativos; cada plugin cobre um requisito do MVP |
-| `rusqlite` (bundled) | 2 | SQLite embutido sem dependência de sistema (ADR-003) |
-| `specta` + `tauri-specta` | 1–2 | tipos IPC gerados, elimina drift Rust↔TS (ADR-004) |
-| `cpal` + `hound` | 4 | captura de áudio multiplataforma + escrita WAV |
-| `whisper-rs` | 5 | binding whisper.cpp (ADR-001) |
-| `reqwest` (rustls) + `sha2` | 5 | download e verificação de modelos |
-| `keyring` | 10 | Credential Manager p/ settings sensíveis futuras |
-| `thiserror`, `tracing`, `serde`, `serde_json`, `dunce` | 1+ | erros, logs, serialização, canonicalização de paths Windows |
+
+| Crate                                                                                                                            | Fase | Justificativa                                                          |
+| -------------------------------------------------------------------------------------------------------------------------------- | ---- | ---------------------------------------------------------------------- |
+| `tauri` 2.x + plugins: `global-shortcut`, `autostart`, `clipboard-manager`, `single-instance`, `store`, `log`, `opener`, `shell` | 1    | shell do app e recursos nativos; cada plugin cobre um requisito do MVP |
+| `rusqlite` (bundled)                                                                                                             | 2    | SQLite embutido sem dependência de sistema (ADR-003)                   |
+| `specta` + `tauri-specta`                                                                                                        | 1–2  | tipos IPC gerados, elimina drift Rust↔TS (ADR-004)                     |
+| `cpal` + `hound`                                                                                                                 | 4    | captura de áudio multiplataforma + escrita WAV                         |
+| `whisper-rs`                                                                                                                     | 5    | binding whisper.cpp (ADR-001)                                          |
+| `reqwest` (rustls) + `sha2`                                                                                                      | 5    | download e verificação de modelos                                      |
+| `keyring`                                                                                                                        | 10   | Credential Manager p/ settings sensíveis futuras                       |
+| `thiserror`, `tracing`, `serde`, `serde_json`, `dunce`                                                                           | 1+   | erros, logs, serialização, canonicalização de paths Windows            |
 
 **JS/TS (npm)**
-| Pacote | Fase | Justificativa |
-|---|---|---|
-| `react` 19, `react-dom`, `typescript` (strict), `vite` | 1 | base da UI |
-| `tailwindcss` 4 + `@tailwindcss/vite` | 1 | estilo, tema escuro |
-| `zustand` | 1 | estado leve sem boilerplate |
-| `@tauri-apps/api` + plugins JS correspondentes | 1+ | ponte com plugins |
-| `eslint`, `prettier`, `vitest`, `@testing-library/react` | 1 | qualidade exigida pelo escopo |
+
+| Pacote                                                   | Fase | Justificativa                 |
+| -------------------------------------------------------- | ---- | ----------------------------- |
+| `react` 19, `react-dom`, `typescript` (strict), `vite`   | 1    | base da UI                    |
+| `tailwindcss` 4 + `@tailwindcss/vite`                    | 1    | estilo, tema escuro           |
+| `zustand`                                                | 1    | estado leve sem boilerplate   |
+| `@tauri-apps/api` + plugins JS correspondentes           | 1+   | ponte com plugins             |
+| `eslint`, `prettier`, `vitest`, `@testing-library/react` | 1    | qualidade exigida pelo escopo |
 
 Regra: qualquer dependência fora desta lista precisa de justificativa no relatório da fase.
 

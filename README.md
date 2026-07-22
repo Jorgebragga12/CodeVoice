@@ -10,14 +10,26 @@ Tauri 2 · React 19 + TypeScript strict · Tailwind CSS 4 · Rust · SQLite (rus
 
 ## Documentação
 
-| Doc | Conteúdo |
-|---|---|
-| [PRODUCT-SPEC](docs/PRODUCT-SPEC.md) | Escopo, fluxo principal e funcionalidades do MVP |
-| [ARCHITECTURE](docs/ARCHITECTURE.md) | Camadas, contratos, ADRs, estrutura de diretórios |
-| [DATABASE-SCHEMA](docs/DATABASE-SCHEMA.md) | Esquema SQLite, migrations, FTS |
-| [SECURITY-MODEL](docs/SECURITY-MODEL.md) | Modelo de ameaças e regras obrigatórias |
-| [MASTER-PLAN](docs/MASTER-PLAN.md) | 10 fases de implementação com critérios de aceite |
+| Doc                                        | Conteúdo                                          |
+| ------------------------------------------ | ------------------------------------------------- |
+| [PRODUCT-SPEC](docs/PRODUCT-SPEC.md)       | Escopo, fluxo principal e funcionalidades do MVP  |
+| [ARCHITECTURE](docs/ARCHITECTURE.md)       | Camadas, contratos, ADRs, estrutura de diretórios |
+| [DATABASE-SCHEMA](docs/DATABASE-SCHEMA.md) | Esquema SQLite, migrations, FTS                   |
+| [SECURITY-MODEL](docs/SECURITY-MODEL.md)   | Modelo de ameaças e regras obrigatórias           |
+| [MASTER-PLAN](docs/MASTER-PLAN.md)         | 10 fases de implementação com critérios de aceite |
 | [PHASE-00-REPORT](docs/PHASE-00-REPORT.md) | Relatório da fundação: ambiente, decisões, riscos |
+
+## Desenvolvimento
+
+```bash
+npm install
+npm run tauri dev      # app desktop em modo desenvolvimento
+npm run lint            # ESLint
+npm run test            # Vitest
+npm run tauri build     # build de produção + instalador
+```
+
+IDE recomendada: [VS Code](https://code.visualstudio.com/) + extensões em [.vscode/extensions.json](.vscode/extensions.json) (Tauri + rust-analyzer).
 
 ## Para implementadores (humanos ou modelos)
 

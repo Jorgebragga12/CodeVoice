@@ -1,6 +1,9 @@
 # Node
 node_modules/
 dist/
+dist-ssr/
+*.local
+npm-debug.log*
 
 # Rust / Tauri
 src-tauri/target/
@@ -26,7 +29,12 @@ logs/
 *.key
 
 # IDE / SO
-.vscode/
+.vscode/*
+!.vscode/extensions.json
 .idea/
 Thumbs.db
 .DS_Store
+*.suo
+
+# Estado local do Claude Code (não é parte do projeto)
+.claude/

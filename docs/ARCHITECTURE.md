@@ -11,20 +11,20 @@
 
 ## 1. Stack validada
 
-| Camada | Escolha | Observação |
-|---|---|---|
-| Shell desktop | **Tauri 2** | WebView2 já presente no Win10/11; binário pequeno; Rust nativo |
-| UI | **React 19 + TypeScript (strict) + Vite** | |
-| Estilo | **Tailwind CSS 4** | tema escuro único |
-| Estado UI | **Zustand** | stores finos; sem Redux |
-| Nativo | **Rust** (edition 2021+) | toda lógica de domínio |
-| Banco | **SQLite** via `rusqlite` (bundled) | acesso só no lado Rust — ver ADR-003 |
-| Transcrição | **whisper.cpp** via `whisper-rs` | ver ADR-001 |
-| Geração de prompt | `claude` CLI headless + templates | ver ADR-002 |
-| Áudio | **cpal** + **hound** (WAV) | captura 16 kHz mono PCM |
-| Tipos IPC | **specta + tauri-specta** | commands Rust geram tipos TS automaticamente |
-| Settings sensíveis | **keyring** (Windows Credential Manager) | ver SECURITY-MODEL.md |
-| Logs | **tauri-plugin-log** + `tracing` | rotação, filtro de secrets |
+| Camada             | Escolha                                   | Observação                                                     |
+| ------------------ | ----------------------------------------- | -------------------------------------------------------------- |
+| Shell desktop      | **Tauri 2**                               | WebView2 já presente no Win10/11; binário pequeno; Rust nativo |
+| UI                 | **React 19 + TypeScript (strict) + Vite** |                                                                |
+| Estilo             | **Tailwind CSS 4**                        | tema escuro único                                              |
+| Estado UI          | **Zustand**                               | stores finos; sem Redux                                        |
+| Nativo             | **Rust** (edition 2021+)                  | toda lógica de domínio                                         |
+| Banco              | **SQLite** via `rusqlite` (bundled)       | acesso só no lado Rust — ver ADR-003                           |
+| Transcrição        | **whisper.cpp** via `whisper-rs`          | ver ADR-001                                                    |
+| Geração de prompt  | `claude` CLI headless + templates         | ver ADR-002                                                    |
+| Áudio              | **cpal** + **hound** (WAV)                | captura 16 kHz mono PCM                                        |
+| Tipos IPC          | **specta + tauri-specta**                 | commands Rust geram tipos TS automaticamente                   |
+| Settings sensíveis | **keyring** (Windows Credential Manager)  | ver SECURITY-MODEL.md                                          |
+| Logs               | **tauri-plugin-log** + `tracing`          | rotação, filtro de secrets                                     |
 
 Compatibilidade Windows verificada na Fase 0: Node v24, Rust 1.97, WebView2 nativo no Win11. Nenhuma incompatibilidade conhecida na stack preferencial, com uma exceção: **faster-whisper foi rejeitado para o MVP** (exigiria embutir runtime Python — ver ADR-001).
 
@@ -128,40 +128,46 @@ Capabilities (Tauri 2 ACL): conceder a cada janela apenas o necessário; a janel
 ## 7. Decisões de arquitetura (ADRs)
 
 ### ADR-001 — Transcrição: whisper-rs (whisper.cpp), não faster-whisper
+
 **Contexto**: faster-whisper é Python (CTranslate2); embutir Python + deps no instalador Windows custa ~1 GB e um sidecar frágil. whisper.cpp tem binding Rust maduro (`whisper-rs`), roda in-process, CPU por padrão com aceleração opcional (Vulkan/CUDA via features).
 **Decisão**: `whisper-rs` in-process, atrás do trait `TranscriptionEngine`. Modelo padrão **large-v3-turbo** (bom PT-BR, rápido); alternativas `medium`/`small` selecionáveis. Modelos baixados on-demand (não embutidos no instalador), com verificação SHA-256.
 **Consequência**: benchmark na Fase 5 na máquina do usuário passa a servir para **validar** desempenho (e decidir se vale oferecer `medium`/`small` para hardware fraco), não para escolher o modelo — `large-v3-turbo` já é definitivo. Se a qualidade/velocidade em PT decepcionar, trocar a impl sem tocar no resto do app.
 **Status**: **confirmada pelo Jorge em 22/07/2026** (`large-v3-turbo` travado como padrão).
 
 ### ADR-002 — Geração de prompts: `claude` CLI headless + templates fallback
+
 **Contexto**: ações como "deixar mais técnico" e "detalhar" exigem um LLM; templates puros não reescrevem texto. O usuário já tem Claude Code instalado e assinatura ativa.
 **Decisão**: provedor primário `ClaudeCliGenerator` — spawn de `claude -p "<meta-prompt>" --output-format json` com o texto passado via **stdin** (nunca interpolado em linha de comando), timeout e sem acesso a ferramentas (`--tool none`/allowedTools vazio — validar flag exata na Fase 6). Fallback `TemplateGenerator` determinístico quando o CLI está ausente/falha/offline: monta as seções do modo a partir da transcrição limpa, sem reescrita.
 **Consequência**: interface `PromptGenerator` permite adicionar outro provedor no futuro sem tocar no resto do app — inclusive um `OpenAiGenerator` (ChatGPT via API), avaliado e adiado deliberadamente (ver ADR-002b). O modo "Transcrição limpa" nunca usa LLM.
 **Status**: **confirmada pelo Jorge em 22/07/2026.**
 
 ### ADR-002b — OpenAI/ChatGPT como provedor: opção B plugável, fora do MVP
+
 **Contexto**: o Jorge perguntou se a geração poderia usar ChatGPT em vez de (ou além de) `claude` CLI.
 **Decisão**: não incluir no MVP por padrão. Motivos: (1) exigiria chave de API da OpenAI gerenciada via `keyring` já na Fase 6, em vez da Fase 10 como planejado para outros segredos; (2) custo por token, enquanto `claude` CLI usa a assinatura já paga do Jorge sem custo marginal; (3) nenhum ganho de qualidade claro para justificar adiantar essa complexidade. A trait `PromptGenerator` já suporta a extensão sem refatoração: adicionar `OpenAiGenerator` no futuro (ou já na Fase 6, se o Jorge pedir) é só mais uma implementação do trait + um seletor de provedor em Settings.
 **Status**: aceita — revisitável a qualquer momento; basta o Jorge confirmar que quer isso já na Fase 6.
 
 ### ADR-003 — SQLite só no lado Rust (rusqlite, não tauri-plugin-sql)
+
 **Contexto**: `tauri-plugin-sql` expõe SQL ao frontend, quebrando a separação de camadas e complicando validação.
 **Decisão**: `rusqlite` (feature `bundled`) com repositórios em `storage/` e migrations próprias sequenciais embutidas (ver DATABASE-SCHEMA.md). WAL mode. FTS5 para busca do histórico.
 **Status**: aceita.
 
 ### ADR-004 — Tipos IPC gerados (tauri-specta)
+
 Commands anotados geram bindings TS; elimina drift de tipos entre Rust e TS. **Status**: aceita.
 
 ### ADR-005 — "Colar no terminal" via clipboard + ação do usuário
+
 **Contexto**: injetar keystrokes em outra janela é frágil e perigoso.
 **Decisão**: MVP copia para clipboard e abre o terminal na pasta; o "colar" é o usuário pressionando `Ctrl+V` (opcionalmente o app envia o paste **apenas** quando o usuário clica no botão "Colar no terminal", nunca automaticamente). Integração programática profunda (ex.: `claude -p` direto, MCP) fica preparada pela interface `ClaudeCodeIntegration` mas fora do MVP.
 **Status**: aceita.
 
 ## 8. Tratamento de erros e logs
 
-- Erros Rust: `thiserror` por módulo, convertidos em um tipo `AppError { code, message_pt, detail }` serializável na borda IPC. Frontend mostra `message_pt` e oferece ação (repetir, abrir configurações…).
-- Logs: `tracing` → arquivo com rotação em `%APPDATA%/CodeVoice/logs/`. **Filtro de secrets obrigatório** (ver SECURITY-MODEL.md §4). Nível configurável; padrão `info`.
-- Error boundary React global + handler de panics Rust que loga e mostra diálogo.
+- Erros Rust: `thiserror` por módulo (a partir da Fase 2, quando os primeiros commands com `Result` existirem), convertidos em um tipo `AppError { code, message_pt, detail }` serializável na borda IPC. Frontend mostra `message_pt` e oferece ação (repetir, abrir configurações…).
+- Logs: `tauri-plugin-log` (facade `log`, não `tracing` — decisão da Fase 1: o plugin já opera sobre `log::Record` por padrão, sem precisar da feature `tracing`; revisitar apenas se surgir necessidade real de spans estruturados) → stdout em dev + arquivo com rotação em `%APPDATA%/CodeVoice/logs/`. **Todo log passa pelo formatter customizado que aplica `security::log_filter::redact()`** (ver SECURITY-MODEL.md §4), implementado e testado na Fase 1. Nível configurável; padrão `info`.
+- Error boundary React global (implementado na Fase 1, `src/app/ErrorBoundary.tsx`) + handler de panics Rust que loga e mostra diálogo (panic hook fica para quando houver diálogo de erro nativo, Fase 10).
 
 ## 9. O que NÃO fazer (anti-requisitos para os implementadores)
 
