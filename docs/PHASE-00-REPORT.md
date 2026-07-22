@@ -25,15 +25,15 @@ Atenção para implementadores: o caminho do projeto contém **espaço** ("Jorge
 - `docs/PHASE-00-REPORT.md` — este arquivo
 - `README.md`, `.gitignore`
 
-## 3. Decisões tomadas (pendentes de confirmação do Jorge)
+## 3. Decisões — status em 22/07/2026 (confirmadas pelo Jorge)
 
-As três decisões abaixo foram tomadas com defaults recomendados porque a pergunta ao usuário ficou sem resposta. São reversíveis e estão isoladas por traits — mas confirme antes da Fase 5/6:
+1. **ADR-001 — CONFIRMADA.** Transcrição com `whisper-rs` (whisper.cpp in-process), não faster-whisper. Modelo **`large-v3-turbo` travado como padrão definitivo** (não é mais "a decidir por benchmark"). O spike da Fase 5 passa a ter propósito de **validação de desempenho** na máquina real e de decidir se vale oferecer `medium`/`small` como opção para hardware mais fraco — não de escolher o modelo padrão.
+2. **ADR-002 — CONFIRMADA com adição.** Geração de prompts via `claude` CLI headless (assinatura existente, sem chave de API) + templates determinísticos como fallback offline, **continua sendo o provedor padrão do MVP**. O Jorge perguntou sobre usar ChatGPT/OpenAI — decisão: a trait `PromptGenerator` já é desenhada para múltiplos provedores (ADR-002 em ARCHITECTURE.md), então um `OpenAiGenerator` fica documentado como **opção B plugável, fora do MVP por padrão** (evita trazer gestão de chave de API da OpenAI para a Fase 6). Se o Jorge quiser ChatGPT ativo já na Fase 6, é só avisar — o encaixe arquitetural já está pronto, é a implementação de mais uma impl do trait.
+3. **Idioma dos docs — CONFIRMADA.** Português com termos técnicos em inglês.
+4. **Nome do app — CONFIRMADA.** "CodeVoice" é o nome definitivo (não é mais provisório). Bundle identifier proposto para a Fase 1: `com.jorgebraga.codevoice` (ajustável — não precisa resolver como domínio real, só ser único).
+5. **Conta GitHub — CONFIRMADA.** Repositório vai na conta pessoal do Jorge, **Jorgebragga12** (não Inconformedia — essa é a conta de trabalho, hoje ativa por padrão no `gh`). Antes de criar/pushar o repo remoto será necessário `gh auth switch --user Jorgebragga12` (ação de rede/GitHub — só será executada mediante pedido explícito, não incluída nesta atualização de docs).
 
-1. **ADR-001** — Transcrição com `whisper-rs` (whisper.cpp in-process), não faster-whisper (evita embutir ~1 GB de Python). Modelo padrão `large-v3-turbo`, decidido definitivamente por benchmark na Fase 5.
-2. **ADR-002** — Geração de prompts via `claude` CLI headless (usa a assinatura existente, sem chave de API) com fallback de templates determinísticos offline.
-3. **Idioma dos docs**: português com termos técnicos em inglês.
-
-Decisões fechadas sem pendência: ADR-003 (rusqlite só no Rust), ADR-004 (tauri-specta), ADR-005 (colar via clipboard + ação do usuário).
+Decisões fechadas sem pendência desde o início: ADR-003 (rusqlite só no Rust), ADR-004 (tauri-specta), ADR-005 (colar via clipboard + ação do usuário).
 
 ## 4. Dependências sugeridas (a instalar na Fase 1+, com justificativa)
 
@@ -73,10 +73,10 @@ Regra: qualquer dependência fora desta lista precisa de justificativa no relat�
 
 ## 6. Pontos que ainda precisam de decisão do Jorge
 
-- Confirmar/ajustar as 3 decisões default do §3.
-- Haverá repositório GitHub? Em qual conta (verificar `gh auth status` — Inconformedia vs Jorgebragga12)?
-- Nome definitivo do app ("CodeVoice" é provisório) — afeta identifier do bundle (`com.?.codevoice`), pastas em `%APPDATA%` e o instalador; decidir até a Fase 1 (mudar depois custa migração).
+Todas as pendências originais foram resolvidas em 22/07/2026 (ver §3). Resta em aberto apenas:
+
 - Assinatura de código do instalador (custo anual) — pode ficar para depois do MVP.
+- Confirmar se quer ChatGPT/OpenAI como provedor de geração já na Fase 6 (padrão atual: não, fica documentado como opção B plugável — ver ADR-002 em §3).
 
 ## 7. Critérios para iniciar a Fase 1
 

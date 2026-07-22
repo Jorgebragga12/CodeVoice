@@ -65,8 +65,8 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 - [ ] Teste unitário do ciclo de estado da gravação (idle→recording→stopped/cancelled)
 
 ### Fase 5 — Transcrição Whisper
-**Escopo**: `transcription/` com trait + impl whisper-rs; `model_manager.rs` (download HTTPS com progresso + SHA-256, diretório `%APPDATA%/CodeVoice/models/`); seleção de modelo nas configurações (large-v3-turbo padrão; medium/small alternativos); transcrição com `language=pt` + initial_prompt com glossário técnico (nomes de arquivos, comandos, tecnologias do projeto ativo); eventos de progresso; erros: silêncio (RMS abaixo de limiar), modelo ausente, áudio inválido, falha.
-**Spike obrigatório no início da fase**: benchmark de 3 modelos com áudio PT real na máquina do Jorge (tempo + qualidade), registrado no relatório — decide o modelo padrão definitivo (ADR-001).
+**Escopo**: `transcription/` com trait + impl whisper-rs; `model_manager.rs` (download HTTPS com progresso + SHA-256, diretório `%APPDATA%/CodeVoice/models/`); seleção de modelo nas configurações (**large-v3-turbo padrão, confirmado — ADR-001**; medium/small como alternativas para hardware fraco); transcrição com `language=pt` + initial_prompt com glossário técnico (nomes de arquivos, comandos, tecnologias do projeto ativo); eventos de progresso; erros: silêncio (RMS abaixo de limiar), modelo ausente, áudio inválido, falha.
+**Spike no início da fase**: benchmark de large-v3-turbo (e opcionalmente medium/small) com áudio PT real na máquina do Jorge (tempo + qualidade), registrado no relatório — **não decide mais o modelo padrão** (já travado), serve para validar desempenho aceitável e decidir se medium/small valem a pena oferecer como opção.
 **Critérios de aceite**:
 - [ ] Falar 30 s em PT citando "tauri-plugin-sql", "package.json", "useEffect" → termos preservados
 - [ ] Primeiro uso baixa modelo com progresso e valida SHA-256; corromper o arquivo → erro claro + re-download
@@ -75,6 +75,7 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 
 ### Fase 6 — Geração de prompts
 **Escopo**: `promptgen/` com trait + `TemplateGenerator` (determinístico, 10 modos, seções do PRODUCT-SPEC §5.4, contexto do projeto injetado) + `ClaudeCliGenerator` (spawn `claude` headless, texto via stdin, JSON output, timeout 60 s, sem tools; validar flags exatas da versão instalada); detecção de disponibilidade do CLI; fallback automático CLI→template com aviso ao usuário; meta-prompts dos 10 modos versionados em arquivos Rust/markdown embutidos.
+**Fora do escopo padrão desta fase** (ADR-002b): `OpenAiGenerator` (ChatGPT via API) — só entra se o Jorge confirmar explicitamente antes do início da fase; se confirmado, adiciona escopo: chave de API da OpenAI via `keyring` (adiantada da Fase 10) + seletor de provedor em Settings.
 **Critérios de aceite**:
 - [ ] Cada um dos 10 modos gera saída a partir de transcrição real (CLI e template)
 - [ ] Prompt técnico contém as seções aplicáveis e omite vazias; contexto do projeto (stack/regras/proibições) presente
@@ -114,6 +115,5 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 ## 4. Critérios para iniciar a Fase 1
 
 - [x] Docs da Fase 0 criados e consistentes
-- [ ] Jorge validou (ou ajustou) as 3 decisões default: ADR-001 (whisper-rs), ADR-002 (claude CLI + templates), idioma dos docs
-- [ ] Jorge autorizou a criação do scaffold (instala dependências e cria ~centenas de arquivos)
-- [ ] Definido se haverá repositório GitHub (e em qual conta — verificar `gh auth status` antes)
+- [x] Decisões validadas em 22/07/2026: ADR-001 (whisper-rs, large-v3-turbo), ADR-002 (claude CLI + templates; OpenAI adiado — ADR-002b), idioma dos docs (PT), nome do app (CodeVoice, definitivo), conta GitHub (Jorgebragga12)
+- [ ] Jorge autoriza a criação do scaffold (instala dependências e cria ~centenas de arquivos)
