@@ -533,7 +533,6 @@ dependencies = [
 name = "codevoice"
 version = "0.1.0"
 dependencies = [
- "dunce",
  "log",
  "once_cell",
  "regex",
@@ -549,8 +548,6 @@ dependencies = [
  "tauri-plugin-shell",
  "tauri-plugin-single-instance",
  "tauri-plugin-store",
- "thiserror 2.0.19",
- "tracing",
 ]
 
 [[package]]

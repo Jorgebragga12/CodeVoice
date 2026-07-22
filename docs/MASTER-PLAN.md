@@ -8,7 +8,7 @@
 | Fase | Nome                   | Depende de | Entrega verificável                       |
 | ---- | ---------------------- | ---------- | ----------------------------------------- |
 | 0    | Fundação (docs)        | —          | ✅ concluída (este repositório)           |
-| 1    | Scaffold e qualidade   | 0          | app Tauri abre; lint/test/build verdes    |
+| 1    | Scaffold e qualidade   | 0          | ✅ concluída — ver PHASE-01-REPORT.md     |
 | 2    | Banco e storage        | 1          | migrations + repositórios + testes        |
 | 3    | Cadastro de projetos   | 2          | CRUD + importação assistida segura        |
 | 4    | Gravação de áudio      | 1          | gravar/cancelar por atalho global         |
@@ -39,10 +39,12 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 **Comandos previstos**: `npm create tauri-app@latest` (template react-ts), `npm i -D tailwindcss @tailwindcss/vite eslint prettier vitest`, `cargo add` dos plugins base.
 **Critérios de aceite**:
 
-- [ ] `npm run tauri dev` abre janela escura "CodeVoice"
-- [ ] `npm run lint`, `npm run test`, `cargo test`, `npm run tauri build` verdes
-- [ ] TS `strict: true`; CI local documentada no README
-- [ ] Segunda execução do exe foca a janela existente
+- [x] `npm run tauri dev` abre janela escura "CodeVoice"
+- [x] `npm run lint`, `npm run test`, `cargo test`, `npm run tauri build` verdes
+- [x] TS `strict: true`; CI local documentada no README
+- [x] Segunda execução do exe foca a janela existente
+
+✅ **Concluída em 22/07/2026** — detalhes em [PHASE-01-REPORT.md](PHASE-01-REPORT.md).
 
 ### Fase 2 — Banco e storage
 
