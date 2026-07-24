@@ -12,6 +12,24 @@ atalho global configurável, janela compacta de gravação (frameless, always-on
 configurações (microfone/atalho/manter-áudio), limite de 10 min vigiado no backend, e limpeza
 de áudios órfãos no startup.
 
+## 2b. Validação ao vivo (24/07/2026, com o Jorge)
+
+O teste manual encontrou e corrigiu **um bug real** que os testes sem hardware não pegariam:
+a janela recorder criada em runtime com `WebviewUrl::App` não resolvia a URL contra o dev
+server em modo dev — abria **em branco** e às vezes crashava o processo (exit `0xcfffffff`).
+Corrigido declarando a janela em `tauri.conf.json` (oculta, criada no startup) — commit
+`fbf402d`. Depois da correção:
+
+- ✅ Gravação real de **69 s** capturada; WAV validado byte a byte: header `16 kHz / mono /
+  16-bit`, RIFF finalizado corretamente, **voz presente no sinal** (pico 1085, sinal em ~6% das
+  amostras = os trechos falados). Ou seja, captura + resample + WAV + stop funcionam de ponta a
+  ponta com voz real.
+- ✅ Sem crash; janela recorder renderiza contador/botões corretamente.
+- 📌 **Áudio ficou baixo** (pico ~-30 dB) — é nível de microfone do Windows, não bug. A Fase 5
+  vai normalizar o volume antes de mandar pro Whisper, o que resolve isso automaticamente.
+- ⏳ Ainda leves: cronometrar o "< 300 ms" do atalho, `Esc` cancelando, e troca entre dois
+  microfones físicos.
+
 ## 2. Critérios de aceite (MASTER-PLAN §3, Fase 4) — estado honesto
 
 | Critério                                                                 | Estado                                                                                                                                                                                                                       |
