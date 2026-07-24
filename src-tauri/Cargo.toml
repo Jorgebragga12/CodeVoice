@@ -39,6 +39,14 @@ thiserror = "2.0.19"
 specta-typescript = "0.0.12"
 specta = { version = "2.0.0-rc.25", features = ["derive"] }
 tauri-specta = { version = "2.0.0-rc", features = ["typescript"], default-features = false }
+dunce = "1.0.5"
+
+# Só usado em `projects::scanner` para detectar NTFS hardlinks (`GetFileInformationByHandle` /
+# `nNumberOfLinks`) — `std::os::windows::fs::MetadataExt::number_of_links` continua atrás da
+# feature instável `windows_by_handle` nesta toolchain estável. Já é uma dependência transitiva
+# profunda (via tauri/rusqlite/etc.), então isso não adiciona uma nova árvore de supply-chain.
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.60", features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
 
 [dev-dependencies]
 tempfile = "3.27.0"

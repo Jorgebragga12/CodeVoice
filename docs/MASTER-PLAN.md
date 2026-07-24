@@ -10,7 +10,7 @@
 | 0    | Fundação (docs)        | —          | ✅ concluída (este repositório)           |
 | 1    | Scaffold e qualidade   | 0          | ✅ concluída — ver PHASE-01-REPORT.md     |
 | 2    | Banco e storage        | 1          | ✅ concluída — ver PHASE-02-REPORT.md     |
-| 3    | Cadastro de projetos   | 2          | CRUD + importação assistida segura        |
+| 3    | Cadastro de projetos   | 2          | ✅ concluída — ver PHASE-03-REPORT.md     |
 | 4    | Gravação de áudio      | 1          | gravar/cancelar por atalho global         |
 | 5    | Transcrição Whisper    | 4          | áudio PT real transcrito com progresso    |
 | 6    | Geração de prompts     | 3, 5       | 10 modos funcionando (CLI + template)     |
@@ -62,9 +62,11 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 **Escopo**: telas Projects (lista, criar, editar, excluir com confirmação); validação/canonicalização de path (security/); `scanner.rs` com allowlist/denylist do SECURITY-MODEL §3; fluxo de importação assistida com preview e autorização; regras de projeto (project_rules) ordenáveis.
 **Critérios de aceite**:
 
-- [ ] Cadastrar projeto real (ex.: o próprio CodeVoice) importando CLAUDE.md/README/package.json com preview
-- [ ] Testes do scanner: `.env` ignorado, symlink fora rejeitado, `..\` rejeitado, arquivo >512KB ignorado
-- [ ] Excluir projeto pede confirmação e não órfã o histórico (`ON DELETE SET NULL` verificado)
+- [x] Cadastrar projeto real (ex.: o próprio CodeVoice) importando CLAUDE.md/README/package.json com preview
+- [x] Testes do scanner: `.env` ignorado, symlink fora rejeitado, `..\` rejeitado, arquivo >512KB ignorado
+- [x] Excluir projeto pede confirmação e não órfã o histórico (`ON DELETE SET NULL` verificado)
+
+✅ **Concluída em 22/07/2026** — detalhes em [PHASE-03-REPORT.md](PHASE-03-REPORT.md). Executada com revisão adversarial de segurança: 4 vulnerabilidades reais encontradas e corrigidas com testes de regressão.
 
 ### Fase 4 — Gravação de áudio
 

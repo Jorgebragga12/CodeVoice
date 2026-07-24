@@ -57,6 +57,30 @@ pub struct ProjectUpdate {
     pub notes: String,
 }
 
+/// Regra de projeto injetada no contexto do prompt (DATABASE-SCHEMA.md `project_rules`).
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ProjectRule {
+    pub id: i32,
+    pub project_id: i32,
+    pub rule: String,
+    pub sort_order: i32,
+    pub created_at: String,
+}
+
+/// Nova regra: `sort_order` não é aceito do cliente — o repositório sempre acrescenta ao
+/// final da lista (maior `sort_order` do projeto + 1). Reordenar é uma operação à parte
+/// (`ProjectRuleRepo::reorder`).
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct NewProjectRule {
+    pub project_id: i32,
+    pub rule: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ProjectRuleUpdate {
+    pub rule: String,
+}
+
 /// Os 10 modos do gerador de prompts (PRODUCT-SPEC.md §5.4). A representação em banco é o
 /// `as_db_str()` — mantém o `CHECK` da coluna `mode` em `generated_prompts`/`prompt_history`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]

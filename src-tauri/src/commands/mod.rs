@@ -1,3 +1,4 @@
 pub mod projects;
+pub mod scanner;
 
-// TODO(Fase 3+): recording, transcription, promptgen, history, settings, terminal
+// TODO(Fase 4+): recording, transcription, promptgen, history, settings, terminal

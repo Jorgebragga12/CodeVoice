@@ -550,6 +550,7 @@ dependencies = [
 name = "codevoice"
 version = "0.1.0"
 dependencies = [
+ "dunce",
  "log",
  "once_cell",
  "r2d2",
@@ -573,6 +574,7 @@ dependencies = [
  "tauri-specta",
  "tempfile",
  "thiserror 2.0.19",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]

@@ -228,4 +228,53 @@ mod tests {
         let err = repo.create(&sample());
         assert!(err.is_err());
     }
+
+    /// Critério de aceite da Fase 3: excluir projeto não pode deixar o histórico órfão — o
+    /// schema usa `ON DELETE SET NULL` em `prompt_history.project_id` (DATABASE-SCHEMA.md §3),
+    /// então a linha do histórico deve continuar existindo, só com `project_id = NULL`.
+    #[test]
+    fn deleting_project_sets_history_project_id_to_null_instead_of_orphaning_rows() {
+        use crate::domain::{NewFlow, PromptMode, PromptSource};
+        use crate::storage::HistoryRepo;
+
+        let db = test_pool();
+        let repo = ProjectRepo::new(db.pool.clone());
+        let history = HistoryRepo::new(db.pool.clone());
+
+        let project = repo.create(&sample()).unwrap();
+
+        let flow = NewFlow {
+            project_id: Some(project.id),
+            duration_ms: 5_000,
+            device_name: "Microfone padrão".into(),
+            transcript_text: "criar tela de projetos".into(),
+            transcript_language: "pt".into(),
+            engine: "whisper-rs".into(),
+            model_name: "large-v3-turbo".into(),
+            transcribe_duration_ms: 200,
+            mode: PromptMode::NewFeature,
+            generator: PromptSource::Template,
+            prompt_content: "Objetivo: criar tela de projetos.".into(),
+        };
+        let history_id = history.save_flow(&flow).unwrap();
+
+        repo.delete(project.id).unwrap();
+
+        let conn = db.pool.get().unwrap();
+        let remaining_project_id: Option<i32> = conn
+            .query_row(
+                "SELECT project_id FROM prompt_history WHERE id = ?1",
+                params![history_id],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(remaining_project_id, None);
+
+        let row_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM prompt_history WHERE id = ?1", params![history_id], |row| {
+                row.get(0)
+            })
+            .unwrap();
+        assert_eq!(row_count, 1, "a linha do histórico não deveria ter sido removida");
+    }
 }

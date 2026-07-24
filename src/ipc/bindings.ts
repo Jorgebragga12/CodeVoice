@@ -20,12 +20,56 @@ export const commands = {
 	created_at: string,
 	updated_at: string,
 } | null, string>(__TAURI_INVOKE("get_project", { id })),
+	/**
+	 *  `input.path` chega como texto bruto do frontend — nunca confiar nele: valida e canonicaliza
+	 *  (SECURITY-MODEL.md §3) antes de gravar, mesmo que a UI já tenha chamado `validate_project_path`
+	 *  ou `preview_project_import` antes (defesa em profundidade, o backend nunca confia no frontend).
+	 */
 	createProject: (input: NewProject) => typedError<Project, string>(__TAURI_INVOKE("create_project", { input })),
+	/**
+	 *  `path` não é editável após a criação (ver `domain::ProjectUpdate` — não tem campo `path`),
+	 *  então não há validação de caminho aqui.
+	 */
 	updateProject: (id: number, input: ProjectUpdate) => typedError<Project, string>(__TAURI_INVOKE("update_project", { id, input })),
+	/**
+	 *  Exclusão real (sem lixeira — SECURITY-MODEL.md §5); a UI exige confirmação antes de chamar.
+	 *  `prompt_history.project_id` usa `ON DELETE SET NULL`, então o histórico não fica órfão.
+	 */
 	deleteProject: (id: number) => typedError<null, string>(__TAURI_INVOKE("delete_project", { id })),
+	listProjectRules: (projectId: number) => typedError<ProjectRule[], string>(__TAURI_INVOKE("list_project_rules", { projectId })),
+	createProjectRule: (input: NewProjectRule) => typedError<ProjectRule, string>(__TAURI_INVOKE("create_project_rule", { input })),
+	updateProjectRule: (id: number, input: ProjectRuleUpdate) => typedError<ProjectRule, string>(__TAURI_INVOKE("update_project_rule", { id, input })),
+	deleteProjectRule: (id: number) => typedError<null, string>(__TAURI_INVOKE("delete_project_rule", { id })),
+	reorderProjectRules: (projectId: number, orderedIds: number[]) => typedError<null, string>(__TAURI_INVOKE("reorder_project_rules", { projectId, orderedIds })),
+	/**
+	 *  Valida e canonicaliza um caminho digitado pelo usuário, sem tocar no banco. Usado pelo
+	 *  frontend pra dar feedback imediato (ex.: ao sair do campo de caminho) antes de tentar
+	 *  importar ou salvar o projeto.
+	 */
+	validateProjectPath: (path: string) => typedError<string, string>(__TAURI_INVOKE("validate_project_path", { path })),
+	/**
+	 *  Importação assistida (SECURITY-MODEL.md §3): só lê arquivos da allowlist + lista nomes de
+	 *  diretórios (2 níveis). Não salva nada — devolve um preview pra UI mostrar antes do usuário
+	 *  confirmar. Só deve ser chamado sob ação explícita (botão "Pré-visualizar importação").
+	 */
+	previewProjectImport: (path: string) => typedError<ImportPreview, string>(__TAURI_INVOKE("preview_project_import", { path })),
 };
 
 /* Types */
+/**  Resultado da importação assistida: nada foi salvo, é só um preview do que *seria* lido. */
+export type ImportPreview = {
+	root: string,
+	files: ImportedFile[],
+	directories: string[],
+};
+
+/**  Um arquivo lido pela importação assistida (só arquivos da allowlist chegam aqui). */
+export type ImportedFile = {
+	relative_path: string,
+	size_bytes: number,
+	content: string,
+};
+
 /**
  *  Campos aceitos ao criar um projeto. `path` já deve chegar validado/canonicalizado
  *  pela camada de commands (ver SECURITY-MODEL.md §3 — validação entra na Fase 3).
@@ -43,6 +87,16 @@ export type NewProject = {
 	notes?: string,
 };
 
+/**
+ *  Nova regra: `sort_order` não é aceito do cliente — o repositório sempre acrescenta ao
+ *  final da lista (maior `sort_order` do projeto + 1). Reordenar é uma operação à parte
+ *  (`ProjectRuleRepo::reorder`).
+ */
+export type NewProjectRule = {
+	project_id: number,
+	rule: string,
+};
+
 export type Project = {
 	id: number,
 	name: string,
@@ -57,6 +111,19 @@ export type Project = {
 	notes: string,
 	created_at: string,
 	updated_at: string,
+};
+
+/**  Regra de projeto injetada no contexto do prompt (DATABASE-SCHEMA.md `project_rules`). */
+export type ProjectRule = {
+	id: number,
+	project_id: number,
+	rule: string,
+	sort_order: number,
+	created_at: string,
+};
+
+export type ProjectRuleUpdate = {
+	rule: string,
 };
 
 export type ProjectUpdate = {

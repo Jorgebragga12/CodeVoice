@@ -20,6 +20,13 @@ pub fn run() {
         commands::projects::create_project,
         commands::projects::update_project,
         commands::projects::delete_project,
+        commands::projects::list_project_rules,
+        commands::projects::create_project_rule,
+        commands::projects::update_project_rule,
+        commands::projects::delete_project_rule,
+        commands::projects::reorder_project_rules,
+        commands::scanner::validate_project_path,
+        commands::scanner::preview_project_import,
     ]);
 
     #[cfg(debug_assertions)]
@@ -70,6 +77,7 @@ pub fn run() {
             let app_data_dir = app.path().app_data_dir().expect("sem app_data_dir resolvido");
             let pool = storage::init_pool(&app_data_dir).expect("falha ao inicializar o banco");
             app.manage(storage::ProjectRepo::new(pool.clone()));
+            app.manage(storage::ProjectRuleRepo::new(pool.clone()));
             app.manage(storage::HistoryRepo::new(pool));
 
             Ok(())
