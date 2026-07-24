@@ -1,6 +1,7 @@
 pub mod projects;
 pub mod recording;
 pub mod scanner;
+pub mod transcription;
 pub mod window;
 
-// TODO(Fase 5+): transcription, promptgen, history, terminal
+// TODO(Fase 6+): promptgen, history, terminal

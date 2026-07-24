@@ -10,6 +10,7 @@ pub const DEFAULT_HOTKEY: &str = "CmdOrCtrl+Shift+Space";
 const KEY_MICROPHONE: &str = "microphone";
 const KEY_HOTKEY: &str = "hotkey";
 const KEY_KEEP_AUDIO: &str = "keep_audio";
+const KEY_WHISPER_MODEL: &str = "whisper_model";
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct RecordingSettings {
@@ -18,6 +19,9 @@ pub struct RecordingSettings {
     pub hotkey: String,
     /// Manter o WAV após o processamento. **Desligado por padrão** (PRODUCT-SPEC §5.2).
     pub keep_audio: bool,
+    /// Id do modelo Whisper selecionado (ver `transcription::model_manager::MODELS`). Padrão
+    /// `large-v3-turbo` (ADR-001).
+    pub whisper_model: String,
 }
 
 impl Default for RecordingSettings {
@@ -26,6 +30,7 @@ impl Default for RecordingSettings {
             microphone: None,
             hotkey: DEFAULT_HOTKEY.to_string(),
             keep_audio: false,
+            whisper_model: crate::transcription::model_manager::DEFAULT_MODEL_ID.to_string(),
         }
     }
 }
@@ -81,6 +86,10 @@ impl SettingsRepo {
                 .get_raw(KEY_KEEP_AUDIO)?
                 .map(|v| v == "true")
                 .unwrap_or(defaults.keep_audio),
+            whisper_model: self
+                .get_raw(KEY_WHISPER_MODEL)?
+                .filter(|s| !s.is_empty())
+                .unwrap_or(defaults.whisper_model),
         })
     }
 
@@ -91,6 +100,7 @@ impl SettingsRepo {
         self.set_raw(KEY_MICROPHONE, settings.microphone.as_deref().unwrap_or(""))?;
         self.set_raw(KEY_HOTKEY, &settings.hotkey)?;
         self.set_raw(KEY_KEEP_AUDIO, if settings.keep_audio { "true" } else { "false" })?;
+        self.set_raw(KEY_WHISPER_MODEL, &settings.whisper_model)?;
         Ok(())
     }
 }
@@ -120,6 +130,7 @@ mod tests {
             microphone: Some("Microfone (Realtek)".into()),
             hotkey: "CmdOrCtrl+Alt+R".into(),
             keep_audio: true,
+            whisper_model: "small".into(),
         })
         .unwrap();
 
@@ -127,6 +138,7 @@ mod tests {
         assert_eq!(settings.microphone.as_deref(), Some("Microfone (Realtek)"));
         assert_eq!(settings.hotkey, "CmdOrCtrl+Alt+R");
         assert!(settings.keep_audio);
+        assert_eq!(settings.whisper_model, "small");
     }
 
     #[test]

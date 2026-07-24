@@ -185,3 +185,26 @@ pub struct NewRecording {
     pub audio_kept: bool,
     pub status: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct Transcription {
+    pub id: i32,
+    pub recording_id: i32,
+    pub text: String,
+    pub language: String,
+    pub engine: String,
+    pub model_name: String,
+    /// Tempo de processamento (ms), não a duração do áudio.
+    pub duration_ms: i32,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct NewTranscription {
+    pub recording_id: i32,
+    pub text: String,
+    pub language: String,
+    pub engine: String,
+    pub model_name: String,
+    pub duration_ms: i32,
+}

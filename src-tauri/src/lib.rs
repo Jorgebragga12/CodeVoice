@@ -39,6 +39,10 @@ pub fn run() {
         commands::window::show_recorder_window,
         commands::window::hide_recorder_window,
         commands::window::update_hotkey,
+        commands::transcription::list_whisper_models,
+        commands::transcription::transcription_status,
+        commands::transcription::download_model,
+        commands::transcription::transcribe_recording,
     ]);
 
     #[cfg(debug_assertions)]
@@ -92,6 +96,8 @@ pub fn run() {
             app.manage(storage::ProjectRuleRepo::new(pool.clone()));
             app.manage(storage::HistoryRepo::new(pool.clone()));
             app.manage(storage::RecordingRepo::new(pool.clone()));
+            app.manage(storage::TranscriptionRepo::new(pool.clone()));
+            app.manage(commands::transcription::AppDataDir(app_data_dir.clone()));
 
             let settings = settings::SettingsRepo::new(pool);
             let recording_settings = settings.get_recording_settings().unwrap_or_default();
