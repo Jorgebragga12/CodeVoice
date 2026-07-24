@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { commands, type AudioDevice, type RecordingSettings } from "../../ipc/bindings";
+import { WhisperModelSettings } from "./WhisperModelSettings";
 
 export function Settings() {
   const [devices, setDevices] = useState<AudioDevice[]>([]);
@@ -105,6 +106,11 @@ export function Settings() {
           Pressione o atalho para começar a gravar e novamente para encerrar.
         </p>
       </section>
+
+      <WhisperModelSettings
+        settings={settings}
+        onModelChange={(modelId) => void persist({ ...settings, whisper_model: modelId })}
+      />
 
       <section className="flex items-start gap-2">
         <input

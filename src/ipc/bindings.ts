@@ -70,6 +70,24 @@ export const commands = {
 	 *  nenhum por causa de uma escolha inválida.
 	 */
 	updateHotkey: (hotkeyCombo: string) => typedError<null, string>(__TAURI_INVOKE("update_hotkey", { hotkeyCombo })),
+	listWhisperModels: () => typedError<WhisperModelOption[], string>(__TAURI_INVOKE("list_whisper_models")),
+	/**  Status do motor para o modelo atualmente selecionado: pronto ou modelo ausente. */
+	transcriptionStatus: () => typedError<EngineStatus, string>(__TAURI_INVOKE("transcription_status")),
+	/**
+	 *  Baixa o modelo selecionado, emitindo `model:download-progress` (0–100). Roda numa thread
+	 *  dedicada porque o download é longo e não pode travar a UI; o resultado volta por evento
+	 *  (`model:download-done` / `model:download-error`).
+	 */
+	downloadModel: () => typedError<null, string>(__TAURI_INVOKE("download_model")),
+	/**
+	 *  Transcreve a gravação `recording_id`: lê o WAV, roda o Whisper (com progresso via
+	 *  `transcription:progress`), grava em `transcriptions`, apaga o WAV se `keep_audio` estiver
+	 *  desligado, e atualiza o status da gravação. Retorna a transcrição salva.
+	 * 
+	 *  Roda numa thread (via spawn_blocking) porque o Whisper prende a CPU por segundos — travar o
+	 *  worker do Tauri deixaria toda a UI sem resposta.
+	 */
+	transcribeRecording: (recordingId: number) => typedError<Transcription, string>(__TAURI_INVOKE("transcribe_recording", { recordingId })),
 };
 
 /* Types */
@@ -81,6 +99,12 @@ export type AudioDevice = {
 	 */
 	is_default: boolean,
 };
+
+/**
+ *  Estado do motor quanto ao modelo. A UI usa isso para decidir se precisa baixar antes de
+ *  transcrever (ADR-001).
+ */
+export type EngineStatus = { status: "model_missing" } | { status: "downloading"; percent: number } | { status: "ready" };
 
 /**  Resultado da importação assistida: nada foi salvo, é só um preview do que *seria* lido. */
 export type ImportPreview = {
@@ -188,11 +212,35 @@ export type RecordingSettings = {
 	hotkey: string,
 	/**  Manter o WAV após o processamento. **Desligado por padrão** (PRODUCT-SPEC §5.2). */
 	keep_audio: boolean,
+	/**
+	 *  Id do modelo Whisper selecionado (ver `transcription::model_manager::MODELS`). Padrão
+	 *  `large-v3-turbo` (ADR-001).
+	 */
+	whisper_model: string,
 };
 
 export type RecordingStatus = {
 	state: RecorderState,
 	elapsed_ms: number,
+};
+
+export type Transcription = {
+	id: number,
+	recording_id: number,
+	text: string,
+	language: string,
+	engine: string,
+	model_name: string,
+	/**  Tempo de processamento (ms), não a duração do áudio. */
+	duration_ms: number,
+	created_at: string,
+};
+
+export type WhisperModelOption = {
+	id: string,
+	label: string,
+	downloaded: boolean,
+	size_bytes: number | null,
 };
 
 /* Tauri Specta runtime */

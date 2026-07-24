@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { commands } from "../../ipc/bindings";
+import { listen } from "@tauri-apps/api/event";
+import { commands, type Recording } from "../../ipc/bindings";
 import { useProjectStore } from "../../stores/projectStore";
+import { useTranscriptionStore } from "../../stores/transcriptionStore";
 import { formatDuration } from "../../lib/format";
 
 /**
@@ -11,6 +13,8 @@ export function RecordBar() {
   const projects = useProjectStore((s) => s.projects);
   const load = useProjectStore((s) => s.load);
 
+  const startTranscription = useTranscriptionStore((s) => s.start);
+
   const [activeProject, setActiveProject] = useState<number | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -19,6 +23,19 @@ export function RecordBar() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Dispara a transcrição sempre que uma gravação encerra, seja qual for o caminho (botão,
+  // atalho global, janela recorder, limite de 10 min) — todos emitem `recording:stopped`.
+  useEffect(() => {
+    // `.catch` porque fora do runtime Tauri (ex.: ambiente de teste) `listen` rejeita — não
+    // pode virar uma unhandled rejection.
+    const unlisten = listen<Recording>("recording:stopped", (e) => {
+      void startTranscription(e.payload.id);
+    }).catch(() => null);
+    return () => {
+      void unlisten.then((fn) => fn?.());
+    };
+  }, [startTranscription]);
 
   useEffect(() => {
     let active = true;
@@ -52,6 +69,9 @@ export function RecordBar() {
     if (isRecording) {
       const result = await commands.stopRecording();
       if (result.status === "error") setError(result.error);
+      // Não dispara a transcrição aqui: o backend emite `recording:stopped` em TODOS os
+      // caminhos de encerramento (botão, atalho global, janela recorder, limite de 10 min), e
+      // o listener abaixo cuida disso de um lugar só.
       return;
     }
     const shown = await commands.showRecorderWindow();
