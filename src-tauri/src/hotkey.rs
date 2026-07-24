@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 use crate::commands::recording;
@@ -41,30 +41,17 @@ pub fn unregister(app: &AppHandle, shortcut: &str) {
     let _ = app.global_shortcut().unregister(shortcut);
 }
 
-/// Mostra (criando na primeira vez) a janela compacta de gravação: sem borda, sempre no topo,
-/// sem barra de tarefas (PRODUCT-SPEC §5.1).
+/// Mostra a janela compacta de gravação (declarada oculta em `tauri.conf.json`, criada no
+/// startup). Só exibir/focar — nada de criar em runtime: além de a janela pré-criada abrir
+/// instantânea (requisito < 300 ms), criar `WebviewWindow` em runtime com `WebviewUrl::App`
+/// não resolve a URL contra o dev server em modo dev (carrega em branco). Deixar o Tauri
+/// resolver a URL pela config, como faz com a janela principal, funciona em dev e produção.
 pub fn show_recorder_window(app: &AppHandle) -> Result<(), String> {
-    if let Some(window) = app.get_webview_window(RECORDER_WINDOW) {
-        let _ = window.show();
-        let _ = window.set_focus();
-        return Ok(());
-    }
-
-    WebviewWindowBuilder::new(
-        app,
-        RECORDER_WINDOW,
-        WebviewUrl::App("index.html?window=recorder".into()),
-    )
-    .title("Gravando — CodeVoice")
-    .inner_size(320.0, 132.0)
-    .resizable(false)
-    .decorations(false)
-    .always_on_top(true)
-    .skip_taskbar(true)
-    .center()
-    .build()
-    .map_err(|e| e.to_string())?;
-
+    let window = app
+        .get_webview_window(RECORDER_WINDOW)
+        .ok_or_else(|| "janela de gravação não encontrada".to_string())?;
+    window.show().map_err(|e| e.to_string())?;
+    let _ = window.set_focus();
     Ok(())
 }
 
