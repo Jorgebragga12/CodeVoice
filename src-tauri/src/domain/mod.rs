@@ -160,3 +160,28 @@ pub struct PromptHistoryEntry {
     pub status: String,
     pub created_at: String,
 }
+
+/// Metadados de uma gravação. `audio_path` é `None` depois que o WAV temporário é apagado
+/// (o caso normal — ver `RecordingRepo::clear_audio_path`).
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct Recording {
+    pub id: i32,
+    pub project_id: Option<i32>,
+    pub duration_ms: i32,
+    pub device_name: String,
+    pub audio_path: Option<String>,
+    pub audio_kept: bool,
+    /// `recorded` | `transcribing` | `transcribed` | `failed` | `cancelled` (CHECK no schema).
+    pub status: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct NewRecording {
+    pub project_id: Option<i32>,
+    pub duration_ms: i32,
+    pub device_name: String,
+    pub audio_path: Option<String>,
+    pub audio_kept: bool,
+    pub status: String,
+}

@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "recorder",
+  "description": "Janela compacta de gravação. Deliberadamente sem shell, fs, opener ou clipboard — ela só mostra o contador e dispara parar/cancelar (ARCHITECTURE §6, menor privilégio).",
+  "windows": ["recorder"],
+  "permissions": ["core:event:default", "core:window:allow-start-dragging"]
+}

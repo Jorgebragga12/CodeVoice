@@ -40,6 +40,8 @@ specta-typescript = "0.0.12"
 specta = { version = "2.0.0-rc.25", features = ["derive"] }
 tauri-specta = { version = "2.0.0-rc", features = ["typescript"], default-features = false }
 dunce = "1.0.5"
+cpal = "0.16"
+hound = "3.5.1"
 
 # Só usado em `projects::scanner` para detectar NTFS hardlinks (`GetFileInformationByHandle` /
 # `nNumberOfLinks`) — `std::os::windows::fs::MetadataExt::number_of_links` continua atrás da

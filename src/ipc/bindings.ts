@@ -53,9 +53,35 @@ export const commands = {
 	 *  confirmar. Só deve ser chamado sob ação explícita (botão "Pré-visualizar importação").
 	 */
 	previewProjectImport: (path: string) => typedError<ImportPreview, string>(__TAURI_INVOKE("preview_project_import", { path })),
+	listAudioDevices: () => typedError<AudioDevice[], string>(__TAURI_INVOKE("list_audio_devices")),
+	getRecordingSettings: () => typedError<RecordingSettings, string>(__TAURI_INVOKE("get_recording_settings")),
+	saveRecordingSettings: (settings: RecordingSettings) => typedError<null, string>(__TAURI_INVOKE("save_recording_settings", { settings })),
+	recordingStatus: () => typedError<RecordingStatus, string>(__TAURI_INVOKE("recording_status")),
+	setActiveProject: (projectId: number | null) => typedError<null, string>(__TAURI_INVOKE("set_active_project", { projectId })),
+	startRecording: () => typedError<null, string>(__TAURI_INVOKE("start_recording")),
+	stopRecording: () => typedError<Recording, string>(__TAURI_INVOKE("stop_recording")),
+	cancelRecording: () => typedError<null, string>(__TAURI_INVOKE("cancel_recording")),
+	showRecorderWindow: () => typedError<null, string>(__TAURI_INVOKE("show_recorder_window")),
+	/**  Esconde a janela compacta de gravação. Chamado pela própria janela ao terminar/cancelar. */
+	hideRecorderWindow: () => typedError<null, string>(__TAURI_INVOKE("hide_recorder_window")),
+	/**
+	 *  Troca o atalho global em tempo real: desregistra o antigo, tenta o novo e, se o novo estiver
+	 *  tomado por outro programa, **restaura o anterior** para o usuário não ficar sem atalho
+	 *  nenhum por causa de uma escolha inválida.
+	 */
+	updateHotkey: (hotkeyCombo: string) => typedError<null, string>(__TAURI_INVOKE("update_hotkey", { hotkeyCombo })),
 };
 
 /* Types */
+export type AudioDevice = {
+	name: string,
+	/**
+	 *  `true` para o microfone padrão do sistema — a UI marca ele como "(padrão)" e é o que
+	 *  usamos quando o usuário nunca escolheu nada.
+	 */
+	is_default: boolean,
+};
+
 /**  Resultado da importação assistida: nada foi salvo, é só um preview do que *seria* lido. */
 export type ImportPreview = {
 	root: string,
@@ -136,6 +162,37 @@ export type ProjectUpdate = {
 	forbidden_tech: string,
 	database_info: string,
 	notes: string,
+};
+
+export type RecorderState = "idle" | "recording" | "stopped" | "cancelled";
+
+/**
+ *  Metadados de uma gravação. `audio_path` é `None` depois que o WAV temporário é apagado
+ *  (o caso normal — ver `RecordingRepo::clear_audio_path`).
+ */
+export type Recording = {
+	id: number,
+	project_id: number | null,
+	duration_ms: number,
+	device_name: string,
+	audio_path: string | null,
+	audio_kept: boolean,
+	/**  `recorded` | `transcribing` | `transcribed` | `failed` | `cancelled` (CHECK no schema). */
+	status: string,
+	created_at: string,
+};
+
+export type RecordingSettings = {
+	/**  `None` = usar o microfone padrão do sistema. */
+	microphone: string | null,
+	hotkey: string,
+	/**  Manter o WAV após o processamento. **Desligado por padrão** (PRODUCT-SPEC §5.2). */
+	keep_audio: boolean,
+};
+
+export type RecordingStatus = {
+	state: RecorderState,
+	elapsed_ms: number,
 };
 
 /* Tauri Specta runtime */

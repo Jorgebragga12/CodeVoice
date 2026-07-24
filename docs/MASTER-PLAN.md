@@ -5,19 +5,19 @@
 
 ## 1. Visão geral das fases
 
-| Fase | Nome                   | Depende de | Entrega verificável                       |
-| ---- | ---------------------- | ---------- | ----------------------------------------- |
-| 0    | Fundação (docs)        | —          | ✅ concluída (este repositório)           |
-| 1    | Scaffold e qualidade   | 0          | ✅ concluída — ver PHASE-01-REPORT.md     |
-| 2    | Banco e storage        | 1          | ✅ concluída — ver PHASE-02-REPORT.md     |
-| 3    | Cadastro de projetos   | 2          | ✅ concluída — ver PHASE-03-REPORT.md     |
-| 4    | Gravação de áudio      | 1          | gravar/cancelar por atalho global         |
-| 5    | Transcrição Whisper    | 4          | áudio PT real transcrito com progresso    |
-| 6    | Geração de prompts     | 3, 5       | 10 modos funcionando (CLI + template)     |
-| 7    | Editor e refinamento   | 6          | ações de edição/refino + salvar modelo    |
-| 8    | Histórico              | 2, 6       | busca FTS, filtros, favoritos             |
-| 9    | Terminal e Claude Code | 6          | copiar/abrir terminal/colar sob ação      |
-| 10   | Polimento e instalador | todas      | bandeja, autostart, logs, instalador NSIS |
+| Fase | Nome                   | Depende de | Entrega verificável                         |
+| ---- | ---------------------- | ---------- | ------------------------------------------- |
+| 0    | Fundação (docs)        | —          | ✅ concluída (este repositório)             |
+| 1    | Scaffold e qualidade   | 0          | ✅ concluída — ver PHASE-01-REPORT.md       |
+| 2    | Banco e storage        | 1          | ✅ concluída — ver PHASE-02-REPORT.md       |
+| 3    | Cadastro de projetos   | 2          | ✅ concluída — ver PHASE-03-REPORT.md       |
+| 4    | Gravação de áudio      | 1          | 🟡 implementada — validação de voz c/ Jorge |
+| 5    | Transcrição Whisper    | 4          | áudio PT real transcrito com progresso      |
+| 6    | Geração de prompts     | 3, 5       | 10 modos funcionando (CLI + template)       |
+| 7    | Editor e refinamento   | 6          | ações de edição/refino + salvar modelo      |
+| 8    | Histórico              | 2, 6       | busca FTS, filtros, favoritos               |
+| 9    | Terminal e Claude Code | 6          | copiar/abrir terminal/colar sob ação        |
+| 10   | Polimento e instalador | todas      | bandeja, autostart, logs, instalador NSIS   |
 
 Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (independentes entre si).
 
@@ -73,10 +73,12 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 **Escopo**: `audio/` com cpal (listar dispositivos, capturar 16 kHz mono) + hound (WAV em `%APPDATA%/com.jorgebraga.codevoice/tmp/`); atalho global configurável (tauri-plugin-global-shortcut) com captura de conflito; janela recorder (always-on-top, frameless) com indicador + contador + projeto ativo; `Esc` cancela; limite 10 min; exclusão automática do WAV pós-processamento + limpeza de órfãos no startup; metadados em `recordings`.
 **Critérios de aceite**:
 
-- [ ] Com app minimizado na bandeja: atalho abre recorder < 300 ms, grava, atalho encerra
-- [ ] `Esc` cancela e apaga o WAV; troca de microfone funciona
-- [ ] WAV válido 16 kHz mono confirmado; registro em `recordings` correto
-- [ ] Teste unitário do ciclo de estado da gravação (idle→recording→stopped/cancelled)
+- [ ] Com app minimizado na bandeja: atalho abre recorder < 300 ms, grava, atalho encerra — ⚠️ implementado, **validação manual pendente (Jorge)**
+- [ ] `Esc` cancela e apaga o WAV; troca de microfone funciona — ⚠️ implementado, **validação manual pendente (Jorge)**
+- [x] WAV válido 16 kHz mono confirmado (smoke-test de hardware); registro em `recordings` correto (testado)
+- [x] Teste unitário do ciclo de estado da gravação (idle→recording→stopped/cancelled) — 10 testes
+
+🟡 **Implementada em 23/07/2026** — código completo e testado sem hardware; ver [PHASE-04-REPORT.md](PHASE-04-REPORT.md). Os 2 critérios de voz/teclado ao vivo aguardam validação manual do Jorge (roteiro no §7 do relatório).
 
 ### Fase 5 — Transcrição Whisper
 

@@ -3,11 +3,13 @@ mod history_repo;
 mod migrations;
 mod project_repo;
 mod project_rule_repo;
+mod recording_repo;
 
 pub use error::StorageError;
 pub use history_repo::HistoryRepo;
 pub use project_repo::ProjectRepo;
 pub use project_rule_repo::ProjectRuleRepo;
+pub use recording_repo::RecordingRepo;
 
 use r2d2_sqlite::SqliteConnectionManager;
 use std::path::Path;

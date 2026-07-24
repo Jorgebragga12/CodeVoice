@@ -5,6 +5,7 @@ use tauri_specta::{collect_commands, Builder as SpectaBuilder};
 pub mod audio;
 pub mod commands;
 pub mod domain;
+pub mod hotkey;
 pub mod projects;
 pub mod promptgen;
 pub mod security;
@@ -27,6 +28,17 @@ pub fn run() {
         commands::projects::reorder_project_rules,
         commands::scanner::validate_project_path,
         commands::scanner::preview_project_import,
+        commands::recording::list_audio_devices,
+        commands::recording::get_recording_settings,
+        commands::recording::save_recording_settings,
+        commands::recording::recording_status,
+        commands::recording::set_active_project,
+        commands::recording::start_recording,
+        commands::recording::stop_recording,
+        commands::recording::cancel_recording,
+        commands::window::show_recorder_window,
+        commands::window::hide_recorder_window,
+        commands::window::update_hotkey,
     ]);
 
     #[cfg(debug_assertions)]
@@ -78,10 +90,58 @@ pub fn run() {
             let pool = storage::init_pool(&app_data_dir).expect("falha ao inicializar o banco");
             app.manage(storage::ProjectRepo::new(pool.clone()));
             app.manage(storage::ProjectRuleRepo::new(pool.clone()));
-            app.manage(storage::HistoryRepo::new(pool));
+            app.manage(storage::HistoryRepo::new(pool.clone()));
+            app.manage(storage::RecordingRepo::new(pool.clone()));
+
+            let settings = settings::SettingsRepo::new(pool);
+            let recording_settings = settings.get_recording_settings().unwrap_or_default();
+            app.manage(settings);
+
+            // WAVs sobrando aqui são de uma execução que morreu antes de processá-los: voz do
+            // usuário que já deveria ter sido apagada (SECURITY-MODEL §2).
+            let tmp_dir = audio::tmp_files::tmp_dir(&app_data_dir);
+            let removed = audio::tmp_files::cleanup_orphans(&tmp_dir);
+            if removed > 0 {
+                log::info!("removidos {removed} arquivo(s) de áudio órfãos de sessões anteriores");
+            }
+            app.manage(commands::recording::RecorderHandle::new(tmp_dir));
+
+            // Conflito de atalho não é fatal: o app segue usável pelos botões e o usuário troca
+            // a combinação nas Configurações.
+            if let Err(err) = hotkey::register(app.handle(), &recording_settings.hotkey) {
+                log::warn!("{err}");
+            }
+
+            spawn_recording_limit_watchdog(app.handle().clone());
 
             Ok(())
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+/// Vigia o teto de 10 min por gravação (PRODUCT-SPEC §5.2) no backend, não na UI.
+///
+/// Depender do frontend para isso deixaria o limite furado exatamente nos casos em que ele mais
+/// importa: janela de gravação fechada, app minimizado na bandeja, ou webview travada — cenários
+/// em que uma gravação esquecida encheria o disco em silêncio.
+fn spawn_recording_limit_watchdog(app: tauri::AppHandle) {
+    std::thread::spawn(move || loop {
+        std::thread::sleep(std::time::Duration::from_secs(1));
+
+        let reached = app
+            .try_state::<commands::recording::RecorderHandle>()
+            .and_then(|handle| handle.inner.lock().ok().map(|rec| rec.reached_limit()))
+            .unwrap_or(false);
+
+        if reached {
+            log::info!("limite de gravação atingido; encerrando automaticamente");
+            match commands::recording::do_stop(&app) {
+                Ok(_) => {
+                    let _ = tauri::Emitter::emit(&app, "recording:limit-reached", ());
+                }
+                Err(err) => log::error!("falha ao encerrar gravação no limite: {err}"),
+            }
+        }
+    });
 }
