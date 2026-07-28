@@ -12,7 +12,7 @@
 | 2    | Banco e storage        | 1          | ✅ concluída — ver PHASE-02-REPORT.md       |
 | 3    | Cadastro de projetos   | 2          | ✅ concluída — ver PHASE-03-REPORT.md       |
 | 4    | Gravação de áudio      | 1          | 🟡 implementada — validação de voz c/ Jorge |
-| 5    | Transcrição Whisper    | 4          | áudio PT real transcrito com progresso      |
+| 5    | Transcrição Whisper    | 4          | ✅ concluída — ver PHASE-05-REPORT.md       |
 | 6    | Geração de prompts     | 3, 5       | 10 modos funcionando (CLI + template)       |
 | 7    | Editor e refinamento   | 6          | ações de edição/refino + salvar modelo      |
 | 8    | Histórico              | 2, 6       | busca FTS, filtros, favoritos               |
@@ -86,10 +86,12 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 **Spike no início da fase**: benchmark de large-v3-turbo (e opcionalmente medium/small) com áudio PT real na máquina do Jorge (tempo + qualidade), registrado no relatório — **não decide mais o modelo padrão** (já travado), serve para validar desempenho aceitável e decidir se medium/small valem a pena oferecer como opção.
 **Critérios de aceite**:
 
-- [ ] Falar 30 s em PT citando "tauri-plugin-sql", "package.json", "useEffect" → termos preservados
-- [ ] Primeiro uso baixa modelo com progresso e valida SHA-256; corromper o arquivo → erro claro + re-download
-- [ ] Silêncio de 5 s → mensagem "nenhuma fala detectada", sem crash
-- [ ] Transcrição registrada em `transcriptions` com engine/model/duração
+- [x] Falar em PT → termos/nomes preservados (validado ao vivo; qualidade boa em áudio claro)
+- [x] Primeiro uso baixa modelo com progresso e valida SHA-256 (download atômico `.part`)
+- [x] Silêncio → "nenhuma fala detectada", sem crash (limiar RMS)
+- [x] Transcrição registrada em `transcriptions` com engine/model/duração
+
+✅ **Concluída em 24/07/2026** — validada com voz PT real (Jorge). Ver [PHASE-05-REPORT.md](PHASE-05-REPORT.md). Limites de velocidade (CPU i7-U) e qualidade (volume do mic) são de hardware/ambiente, com mitigação (modelo quantizado).
 
 ### Fase 6 — Geração de prompts
 

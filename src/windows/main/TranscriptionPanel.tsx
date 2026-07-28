@@ -43,22 +43,27 @@ export function TranscriptionPanel() {
         </div>
       )}
 
-      {(phase === "downloading" || phase === "transcribing") && (
+      {phase === "downloading" && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-zinc-300">
-            {phase === "downloading" ? "Baixando o modelo…" : "Transcrevendo…"} {progress}%
-          </p>
+          <p className="text-sm text-zinc-300">Baixando o modelo… {progress}%</p>
           <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
             <div
               className="h-full bg-emerald-500 transition-[width] duration-200"
               style={{ width: `${progress}%` }}
             />
           </div>
-          {phase === "downloading" && (
-            <p className="text-xs text-zinc-500">
-              O download acontece só uma vez; nas próximas gravações a transcrição é imediata.
-            </p>
-          )}
+          <p className="text-xs text-zinc-500">
+            O download acontece só uma vez; nas próximas gravações a transcrição é imediata.
+          </p>
+        </div>
+      )}
+
+      {phase === "transcribing" && (
+        <div className="flex flex-col gap-2">
+          {/* Barra indeterminada: o Whisper não dá % confiável em clipes curtos, então mostramos
+              atividade em vez de um número que fica parado. */}
+          <p className="text-sm text-zinc-300">Transcrevendo…</p>
+          <div className="relative h-2 w-full overflow-hidden rounded-full bg-zinc-800 indeterminate-bar" />
         </div>
       )}
 

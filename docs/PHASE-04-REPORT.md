@@ -21,7 +21,7 @@ Corrigido declarando a janela em `tauri.conf.json` (oculta, criada no startup) �
 `fbf402d`. Depois da correção:
 
 - ✅ Gravação real de **69 s** capturada; WAV validado byte a byte: header `16 kHz / mono /
-  16-bit`, RIFF finalizado corretamente, **voz presente no sinal** (pico 1085, sinal em ~6% das
+16-bit`, RIFF finalizado corretamente, **voz presente no sinal** (pico 1085, sinal em ~6% das
   amostras = os trechos falados). Ou seja, captura + resample + WAV + stop funcionam de ponta a
   ponta com voz real.
 - ✅ Sem crash; janela recorder renderiza contador/botões corretamente.

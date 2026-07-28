@@ -18,3 +18,24 @@ body {
     -apple-system,
     sans-serif;
 }
+
+/* Barra indeterminada: usada na transcrição, onde o Whisper não reporta % confiável em áudios
+   curtos. Um segmento desliza da esquerda pra direita indicando atividade. */
+@keyframes indeterminate-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+.indeterminate-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 33%;
+  border-radius: 9999px;
+  background-color: var(--color-emerald-500);
+  animation: indeterminate-slide 1.1s ease-in-out infinite;
+}

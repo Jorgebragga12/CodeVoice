@@ -13,6 +13,15 @@ use super::{
 /// claro de "nenhuma fala detectada" do que texto inventado.
 const SILENCE_RMS_THRESHOLD: f32 = 0.0025; // ~-52 dBFS
 
+/// O whisper.cpp/GGML despejam centenas de linhas de debug no stderr a cada transcrição.
+/// `install_logging_hooks` redireciona esses logs para os hooks do whisper-rs — e como não
+/// habilitamos as features `log_backend`/`tracing_backend`, isso efetivamente os silencia.
+/// Chamado uma única vez (via `Once`) antes da primeira transcrição.
+fn silence_whisper_logs_once() {
+    static INIT: std::sync::Once = std::sync::Once::new();
+    INIT.call_once(whisper_rs::install_logging_hooks);
+}
+
 /// Motor de transcrição baseado em whisper.cpp (via whisper-rs) — a implementação concreta do
 /// ADR-001. O modelo é carregado do disco a cada transcrição num primeiro momento; se isso se
 /// mostrar lento no benchmark da Fase 5, dá para cachear o `WhisperContext` carregado.
@@ -88,6 +97,7 @@ impl TranscriptionEngine for WhisperEngine {
             return Err(TranscribeError::ModelMissing);
         }
 
+        silence_whisper_logs_once();
         let started = std::time::Instant::now();
         let (samples, level) = self.load_samples(audio)?;
 

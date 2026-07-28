@@ -13,13 +13,7 @@ import { commands } from "../ipc/bindings";
  * - `error`: `error` preenchido.
  */
 export type TranscriptionPhase =
-  | "idle"
-  | "checking"
-  | "need_download"
-  | "downloading"
-  | "transcribing"
-  | "done"
-  | "error";
+  "idle" | "checking" | "need_download" | "downloading" | "transcribing" | "done" | "error";
 
 interface TranscriptionState {
   phase: TranscriptionPhase;
