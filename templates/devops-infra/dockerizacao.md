@@ -26,7 +26,7 @@ Containerize o projeto **[nome do projeto]**.
 
 - `docker build` limpo e `docker run` com a aplicação respondendo — demonstre com comando + saída.
 - Reporte o tamanho final da imagem.
-- Confirme que nenhum segredo ficou em camada da imagem (`docker history`).
+- Confirme que nenhum segredo ficou na imagem **inspecionando o conteúdo, não o histórico**: `docker history` só mostra as instruções, então um segredo copiado por `COPY . .` (ou apagado num `RUN` posterior, que não remove da camada anterior) não aparece ali. Exporte e procure de verdade: `docker save [img] -o img.tar && tar -xOf img.tar | grep -aiE "api[_-]?key|secret|password|BEGIN .*PRIVATE KEY"` — ou rode um scanner de segredo na imagem. Confirme também que `.dockerignore` exclui `.env`, `.git` e credenciais.
 
 ## Critérios de aceitação
 

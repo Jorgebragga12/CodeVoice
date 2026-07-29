@@ -17,7 +17,7 @@ Faça uma auditoria de segurança do projeto **[nome do projeto]** (código pró
 2. **Entrada de usuário**: toda entrada validada no servidor? Injeção SQL (queries concatenadas), XSS (render sem escape), path traversal (caminhos vindos do usuário), comando de shell com input.
 3. **Autenticação/autorização**: rotas protegidas verificadas no servidor; usuário A consegue acessar dados do usuário B trocando um ID na URL? (IDOR)
 4. **Dependências**: rodar [npm audit / cargo audit / pip-audit] e listar vulnerabilidades conhecidas com severidade.
-5. **Dados sensíveis**: senha com hash forte? Dados pessoais em log? HTTPS forçado?
+5. **Dados sensíveis**: senha com hash **lento e com salt, próprio para senha** — bcrypt, scrypt ou argon2id, com custo configurado? (SHA-256/SHA-512 e MD5 **reprovam** aqui: são rápidos por design, o que é exatamente o que o atacante quer ao testar bilhões de tentativas por segundo em GPU.) Dados pessoais em log? HTTPS forçado?
 6. **Configuração**: CORS aberto demais, cookies sem httpOnly/Secure, headers de segurança ausentes.
 
 ## Regras

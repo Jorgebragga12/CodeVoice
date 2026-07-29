@@ -34,7 +34,7 @@ Documente a API do projeto **[nome do projeto]** para consumidores externos.
 
 ## Critérios de aceitação
 
-- [ ] Todo exemplo de response foi gerado por chamada real (registre as chamadas feitas).
+- [ ] Todo exemplo de response foi gerado por chamada real **ou marcado `[não verificado]`** (registre as chamadas feitas). Para endpoint que altera/apaga estado, chame só se o ambiente for descartável e os dados forem de teste — na dúvida, marque `[não verificado]` em vez de executar.
 - [ ] Cada endpoint documenta seus erros possíveis com corpo de exemplo.
 - [ ] O guia de primeiros passos foi executado de ponta a ponta e termina em resposta de sucesso.
 - [ ] Nenhum segredo real aparece na documentação.

@@ -79,7 +79,7 @@ do marcador `<<SUA FALA>>`, ajusta os campos entre `[colchetes]` e copia o resul
 | [proposta-comercial](negocios-produto/proposta-comercial.md) | quick | Orçamento/proposta para cliente |
 | [especificacao-prd](negocios-produto/especificacao-prd.md) | planning | Transformar ideia em spec |
 | [analise-concorrencia](negocios-produto/analise-concorrencia.md) | quick | Comparar concorrentes |
-| [ata-de-reuniao](negocios-produto/ata-de-reuniao.md) | clean_transcript | Estruturar reunião gravada/falada |
+| [ata-de-reuniao](negocios-produto/ata-de-reuniao.md) | quick | Estruturar reunião gravada/falada |
 | [descricao-de-vaga](negocios-produto/descricao-de-vaga.md) | quick | Anúncio de vaga |
 
 ### Pessoal e aprendizado (`pessoal-aprendizado/`)

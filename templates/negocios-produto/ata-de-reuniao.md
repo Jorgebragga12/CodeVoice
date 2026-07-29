@@ -1,6 +1,6 @@
 # Ata de reunião
 
-> Modo: `clean_transcript` · Área: negócios
+> Modo: `quick` · Área: negócios
 > Uso: transformar uma reunião falada/gravada em ata estruturada.
 
 ---
