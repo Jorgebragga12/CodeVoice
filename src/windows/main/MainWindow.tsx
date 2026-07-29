@@ -3,9 +3,10 @@ import { Projects } from "./Projects";
 import { RecordBar } from "./RecordBar";
 import { Settings } from "./Settings";
 import { PromptPanel } from "./PromptPanel";
+import { TemplateLibrary } from "./TemplateLibrary";
 import { TranscriptionPanel } from "./TranscriptionPanel";
 
-type Tab = "projects" | "settings";
+type Tab = "projects" | "templates" | "settings";
 
 export function MainWindow() {
   const [tab, setTab] = useState<Tab>("projects");
@@ -18,6 +19,9 @@ export function MainWindow() {
           <TabButton active={tab === "projects"} onClick={() => setTab("projects")}>
             Projetos
           </TabButton>
+          <TabButton active={tab === "templates"} onClick={() => setTab("templates")}>
+            Modelos
+          </TabButton>
           <TabButton active={tab === "settings"} onClick={() => setTab("settings")}>
             Configurações
           </TabButton>
@@ -29,7 +33,9 @@ export function MainWindow() {
           <RecordBar />
           <TranscriptionPanel />
           <PromptPanel />
-          {tab === "projects" ? <Projects /> : <Settings />}
+          {tab === "projects" && <Projects />}
+          {tab === "templates" && <TemplateLibrary />}
+          {tab === "settings" && <Settings />}
         </div>
       </main>
     </div>
