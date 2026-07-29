@@ -113,6 +113,23 @@ export const commands = {
 	 *  para o editor consumir).
 	 */
 	updatePromptContent: (promptId: number, content: string) => typedError<GeneratedPrompt, string>(__TAURI_INVOKE("update_prompt_content", { promptId, content })),
+	listTemplateCategories: () => typedError<TemplateCategory[], string>(__TAURI_INVOKE("list_template_categories")),
+	/**  Lista os modelos de uma categoria, ou todos quando `category` é `None`. */
+	listPromptTemplates: (category: string | null) => typedError<PromptTemplate[], string>(__TAURI_INVOKE("list_prompt_templates", { category })),
+	/**  Salva o prompt atual (já com as edições do usuário) como modelo reutilizável. */
+	savePromptAsTemplate: (promptId: number, name: string, description: string) => typedError<PromptTemplate, string>(__TAURI_INVOKE("save_prompt_as_template", { promptId, name, description })),
+	/**
+	 *  Exclui um modelo do usuário. Modelos da biblioteca embutida são recusados pelo repositório —
+	 *  apagá-los só duraria até o próximo startup, quando o seed os traria de volta.
+	 */
+	deletePromptTemplate: (templateId: number) => typedError<null, string>(__TAURI_INVOKE("delete_prompt_template", { templateId })),
+	/**
+	 *  Gera um prompt usando um modelo como base, em vez dos geradores do modo.
+	 * 
+	 *  Não passa pelo Claude CLI: o modelo **é** o prompt: o que falta é encaixar a fala e os dados do
+	 *  projeto. Mandar ao LLM só arriscaria reescrever um texto que o usuário escolheu deliberadamente.
+	 */
+	generatePromptFromTemplate: (transcriptionId: number, templateId: number) => typedError<GenerationResult, string>(__TAURI_INVOKE("generate_prompt_from_template", { transcriptionId, templateId })),
 };
 
 /* Types */
@@ -250,6 +267,29 @@ export type PromptModeOption = {
 	description: string,
 };
 
+/**
+ *  Modelo de prompt reutilizável (`prompt_templates`). Vem de duas origens: a biblioteca
+ *  embutida no binário (`source = "builtin"`, com `slug` estável) e o "salvar como modelo" do
+ *  editor (`source = "user"`, `slug` nulo).
+ */
+export type PromptTemplate = {
+	id: number,
+	name: string,
+	/**  Valor de `PromptMode::as_db_str()` (CHECK na coluna desde a migration 003). */
+	mode: string,
+	/**  Slug da pasta de origem em `templates/` (ex.: `depuracao`); vazio nos modelos do usuário. */
+	category: string,
+	/**  A linha "> Uso:" do modelo — o que ele serve para fazer, em uma frase. */
+	description: string,
+	content: string,
+	/**  `builtin` (biblioteca embutida, somente leitura) ou `user`. */
+	source: string,
+	slug: string | null,
+	project_id: number | null,
+	created_at: string,
+	updated_at: string,
+};
+
 export type RecorderState = "idle" | "recording" | "stopped" | "cancelled";
 
 /**
@@ -291,6 +331,12 @@ export type RecordingStatus = {
  *  na UI; a definição vive aqui porque quem as executa é o gerador.
  */
 export type RefineAction = "shorten" | "expand" | "more_technical" | "split_into_steps";
+
+export type TemplateCategory = {
+	id: string,
+	label: string,
+	count: number,
+};
 
 export type Transcription = {
 	id: number,

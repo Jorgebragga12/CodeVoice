@@ -48,6 +48,11 @@ pub fn run() {
         commands::promptgen::generate_prompt,
         commands::promptgen::refine_prompt,
         commands::promptgen::update_prompt_content,
+        commands::templates::list_template_categories,
+        commands::templates::list_prompt_templates,
+        commands::templates::save_prompt_as_template,
+        commands::templates::delete_prompt_template,
+        commands::templates::generate_prompt_from_template,
     ]);
 
     #[cfg(debug_assertions)]
@@ -104,6 +109,19 @@ pub fn run() {
             app.manage(storage::TranscriptionRepo::new(pool.clone()));
             app.manage(storage::PromptRepo::new(pool.clone()));
             app.manage(commands::transcription::AppDataDir(app_data_dir.clone()));
+
+            // A biblioteca de modelos vive no binário; o banco é só o índice consultável dela.
+            // Reescrever as linhas `builtin` a cada startup mantém as duas em sincronia após um
+            // update do app (inclusive quando um modelo é renomeado ou removido), sem tocar nos
+            // modelos que o usuário salvou.
+            let template_repo = storage::PromptTemplateRepo::new(pool.clone());
+            match template_repo.replace_builtins(&promptgen::library::builtins()) {
+                Ok(count) => log::info!("biblioteca de modelos sincronizada: {count} modelos"),
+                // Falhar aqui não justifica derrubar o app: o resto do fluxo (gravar,
+                // transcrever, gerar) não depende da biblioteca.
+                Err(err) => log::error!("falha ao sincronizar a biblioteca de modelos: {err}"),
+            }
+            app.manage(template_repo);
 
             let settings = settings::SettingsRepo::new(pool);
             let recording_settings = settings.get_recording_settings().unwrap_or_default();

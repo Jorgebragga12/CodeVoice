@@ -48,7 +48,7 @@ pub fn claude_cli_available() -> Result<bool, String> {
 }
 
 /// Monta o contexto do projeto (stack, regras, proibições) para injetar no prompt.
-fn load_context(app: &AppHandle, project_id: Option<i32>) -> ProjectContext {
+pub(super) fn load_context(app: &AppHandle, project_id: Option<i32>) -> ProjectContext {
     let Some(project_id) = project_id else {
         return ProjectContext::default();
     };
