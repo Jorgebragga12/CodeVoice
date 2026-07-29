@@ -66,17 +66,26 @@ mod tests {
         let gain = normalize_peak(&mut samples);
         assert!(gain > 1.0, "áudio baixo deveria ser amplificado");
 
-        let new_peak = samples.iter().map(|s| (*s as f32 / i16::MAX as f32).abs()).fold(0.0, f32::max);
+        let new_peak = samples
+            .iter()
+            .map(|s| (*s as f32 / i16::MAX as f32).abs())
+            .fold(0.0, f32::max);
         // Chega perto do alvo (limitado pelo teto de ganho, mas 0.033*12 ≈ 0.4 < 0.7, então
         // aqui o ganho é o teto de 12x → pico ~0.4).
-        assert!(new_peak > 0.3, "pico após normalização muito baixo: {new_peak}");
+        assert!(
+            new_peak > 0.3,
+            "pico após normalização muito baixo: {new_peak}"
+        );
     }
 
     #[test]
     fn respects_the_gain_ceiling_on_very_quiet_audio() {
         let mut samples = vec![(0.03 * i16::MAX as f32) as i16; 50];
         let gain = normalize_peak(&mut samples);
-        assert!(gain <= super::MAX_GAIN + 0.001, "ganho passou do teto: {gain}");
+        assert!(
+            gain <= super::MAX_GAIN + 0.001,
+            "ganho passou do teto: {gain}"
+        );
     }
 
     #[test]
@@ -102,8 +111,19 @@ mod tests {
         // Sinal assimétrico perto do limite negativo.
         let mut samples = vec![-8000_i16, 6000, -7000, 5000];
         normalize_peak(&mut samples);
-        // Nenhuma amostra pode ter estourado o range de i16 (o clamp garante isso).
-        assert!(samples.iter().all(|s| *s >= i16::MIN && *s <= i16::MAX));
+
+        // O invariante que importa é o pico ficar no alvo, com folga até o fundo de escala.
+        // (A versão anterior deste teste comparava cada amostra com `i16::MIN`/`i16::MAX`, o que
+        // é sempre verdade para um `i16` — não detectaria estouro nenhum.)
+        let peak = samples
+            .iter()
+            .map(|s| (*s as f32 / i16::MAX as f32).abs())
+            .fold(0.0, f32::max);
+        assert!(peak <= TARGET_PEAK + 0.001, "pico passou do alvo: {peak}");
+
+        // Nenhuma amostra trocou de sinal: é assim que um transbordamento por wrap-around
+        // apareceria, e é o que o `clamp` de `normalize_peak` existe para impedir.
+        assert!(samples[0] < 0 && samples[1] > 0 && samples[2] < 0 && samples[3] > 0);
     }
 
     #[test]
