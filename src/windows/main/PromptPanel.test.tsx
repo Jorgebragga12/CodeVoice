@@ -12,6 +12,7 @@ vi.mock("../../ipc/bindings", () => ({
     listPromptModes: vi.fn(),
     claudeCliAvailable: vi.fn(),
     generatePrompt: vi.fn(),
+    updatePromptContent: vi.fn(),
   },
 }));
 
@@ -46,13 +47,8 @@ function promptResult(overrides: Record<string, unknown> = {}) {
 describe("PromptPanel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    usePromptStore.setState({
-      generating: false,
-      prompt: null,
-      fallbackReason: null,
-      error: null,
-      mode: "technical",
-    });
+    usePromptStore.getState().reset();
+    usePromptStore.setState({ mode: "technical" });
     useTranscriptionStore.setState({ phase: "idle", transcriptionId: null, text: null });
 
     mocked.listPromptModes.mockResolvedValue({
@@ -88,9 +84,8 @@ describe("PromptPanel", () => {
     await waitFor(() => {
       expect(mocked.generatePrompt).toHaveBeenCalledWith(42, "technical");
     });
-    // O textarea do resultado (o <select> de modos também exibiria "Prompt técnico").
-    const output = await screen.findByRole("textbox");
-    expect(output).toHaveValue("# Prompt técnico\n\n## Objetivo\ncriar login");
+    const editor = await screen.findByLabelText("Prompt (editável)");
+    expect(editor).toHaveValue("# Prompt técnico\n\n## Objetivo\ncriar login");
   });
 
   it("warns the user when the prompt came from the template fallback", async () => {
