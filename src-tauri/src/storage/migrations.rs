@@ -3,7 +3,11 @@ use rusqlite::Connection;
 /// Cada migration é aplicada em ordem, uma única vez, controlada por `PRAGMA user_version`.
 /// Nunca editar uma migration já publicada — sempre adicionar uma nova ao final desta lista.
 /// Ver DATABASE-SCHEMA.md.
-const MIGRATIONS: &[(i64, &str, &str)] = &[(1, "001_initial", MIGRATION_001), (2, "002_fts", MIGRATION_002)];
+const MIGRATIONS: &[(i64, &str, &str)] = &[
+    (1, "001_initial", MIGRATION_001),
+    (2, "002_fts", MIGRATION_002),
+    (3, "003_prompt_templates", MIGRATION_003),
+];
 
 const MIGRATION_001: &str = r#"
 CREATE TABLE schema_migrations (
@@ -124,6 +128,44 @@ CREATE VIRTUAL TABLE history_fts USING fts5(
 );
 "#;
 
+/// `prompt_templates` da 001 não servia para a biblioteca da Fase 7: faltava `category` (as 18
+/// pastas de `templates/` não tinham onde ir), `description` (a linha "> Uso:" de cada modelo, que
+/// é a melhor pista do que serve para quê) e uma forma de distinguir modelo embutido de modelo do
+/// usuário. Faltava também o `CHECK` no `mode` que `generated_prompts` já tem — sem ele um
+/// importador com defeito gravaria modo inválido em silêncio.
+///
+/// SQLite não tem `ALTER TABLE ADD CONSTRAINT`, então a tabela é recriada e as linhas existentes
+/// copiadas. Na prática não há nenhuma: até esta fase nenhum código escrevia em `prompt_templates`.
+///
+/// `slug` é a identidade estável dos modelos embutidos (`categoria/arquivo`), o que permite
+/// reescrevê-los a cada versão do app sem tocar nos do usuário (que têm `slug` NULL).
+const MIGRATION_003: &str = r#"
+CREATE TABLE prompt_templates_new (
+  id          INTEGER PRIMARY KEY,
+  name        TEXT NOT NULL,
+  mode        TEXT NOT NULL CHECK (mode IN (
+                'clean_transcript','quick','technical','new_feature','bug_fix',
+                'refactor','planning','code_review','ui_creation','db_change')),
+  category    TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  content     TEXT NOT NULL,
+  source      TEXT NOT NULL DEFAULT 'user' CHECK (source IN ('builtin','user')),
+  slug        TEXT,
+  project_id  INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+  created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+  updated_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+);
+
+INSERT INTO prompt_templates_new (id, name, mode, content, project_id, created_at, updated_at)
+  SELECT id, name, mode, content, project_id, created_at, updated_at FROM prompt_templates;
+
+DROP TABLE prompt_templates;
+ALTER TABLE prompt_templates_new RENAME TO prompt_templates;
+
+CREATE UNIQUE INDEX idx_prompt_templates_slug ON prompt_templates(slug) WHERE slug IS NOT NULL;
+CREATE INDEX idx_prompt_templates_category ON prompt_templates(category);
+"#;
+
 pub fn apply_all(conn: &mut Connection) -> rusqlite::Result<()> {
     let current: i64 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
 
@@ -180,10 +222,10 @@ mod tests {
         }
 
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
-        assert_eq!(version, 2);
+        assert_eq!(version, 3);
 
         let applied: i64 = conn.query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0)).unwrap();
-        assert_eq!(applied, 2);
+        assert_eq!(applied, 3);
     }
 
     #[test]
@@ -193,7 +235,7 @@ mod tests {
         apply_all(&mut conn).unwrap();
 
         let applied: i64 = conn.query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0)).unwrap();
-        assert_eq!(applied, 2);
+        assert_eq!(applied, 3);
     }
 
     #[test]
@@ -212,7 +254,85 @@ mod tests {
         apply_all(&mut conn).unwrap();
 
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
-        assert_eq!(version, 2);
+        assert_eq!(version, 3);
         assert!(table_names(&conn).iter().any(|t| t == "history_fts"));
+    }
+
+    fn column_names(conn: &Connection, table: &str) -> Vec<String> {
+        let mut stmt = conn.prepare(&format!("PRAGMA table_info({table})")).unwrap();
+        stmt.query_map([], |row| row.get::<_, String>(1))
+            .unwrap()
+            .map(|r| r.unwrap())
+            .collect()
+    }
+
+    #[test]
+    fn migration_003_adds_the_library_columns() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        apply_all(&mut conn).unwrap();
+
+        let columns = column_names(&conn, "prompt_templates");
+        for expected in ["category", "description", "source", "slug"] {
+            assert!(columns.iter().any(|c| c == expected), "faltou a coluna {expected}");
+        }
+        // A tabela auxiliar da recriação não pode sobrar.
+        assert!(!table_names(&conn).iter().any(|t| t == "prompt_templates_new"));
+    }
+
+    #[test]
+    fn migration_003_preserves_rows_created_under_the_old_schema() {
+        let mut conn = Connection::open_in_memory().unwrap();
+
+        conn.execute_batch(MIGRATION_001).unwrap();
+        conn.execute_batch(MIGRATION_002).unwrap();
+        conn.execute(
+            "INSERT INTO schema_migrations (version, name) VALUES (1, '001_initial'), (2, '002_fts')",
+            [],
+        )
+        .unwrap();
+        conn.pragma_update(None, "user_version", 2).unwrap();
+        conn.execute(
+            "INSERT INTO prompt_templates (name, mode, content) VALUES ('Antigo', 'quick', 'corpo')",
+            [],
+        )
+        .unwrap();
+
+        apply_all(&mut conn).unwrap();
+
+        let (name, source): (String, String) = conn
+            .query_row("SELECT name, source FROM prompt_templates", [], |r| {
+                Ok((r.get(0)?, r.get(1)?))
+            })
+            .unwrap();
+        assert_eq!(name, "Antigo");
+        assert_eq!(source, "user", "modelo pré-existente é do usuário, não embutido");
+    }
+
+    #[test]
+    fn migration_003_rejects_invalid_mode() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        apply_all(&mut conn).unwrap();
+
+        let bad = conn.execute(
+            "INSERT INTO prompt_templates (name, mode, content) VALUES ('x', 'modo_inventado', 'y')",
+            [],
+        );
+        assert!(bad.is_err(), "o CHECK de mode precisa barrar modo fora dos 10");
+    }
+
+    #[test]
+    fn migration_003_keeps_builtin_slug_unique() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        apply_all(&mut conn).unwrap();
+
+        let insert = "INSERT INTO prompt_templates (name, mode, content, source, slug) \
+                      VALUES ('x', 'quick', 'y', 'builtin', 'depuracao/erro-agora')";
+        conn.execute(insert, []).unwrap();
+        assert!(conn.execute(insert, []).is_err(), "slug de builtin não pode duplicar");
+
+        // O índice é parcial: modelos do usuário (slug NULL) podem coexistir sem limite.
+        let user = "INSERT INTO prompt_templates (name, mode, content) VALUES ('u', 'quick', 'z')";
+        conn.execute(user, []).unwrap();
+        conn.execute(user, []).unwrap();
     }
 }

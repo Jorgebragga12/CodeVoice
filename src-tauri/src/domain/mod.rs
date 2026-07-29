@@ -279,3 +279,40 @@ pub struct NewGeneratedPrompt {
     pub generator: String,
     pub content: String,
 }
+
+/// Modelo de prompt reutilizável (`prompt_templates`). Vem de duas origens: a biblioteca
+/// embutida no binário (`source = "builtin"`, com `slug` estável) e o "salvar como modelo" do
+/// editor (`source = "user"`, `slug` nulo).
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct PromptTemplate {
+    pub id: i32,
+    pub name: String,
+    /// Valor de `PromptMode::as_db_str()` (CHECK na coluna desde a migration 003).
+    pub mode: String,
+    /// Slug da pasta de origem em `templates/` (ex.: `depuracao`); vazio nos modelos do usuário.
+    pub category: String,
+    /// A linha "> Uso:" do modelo — o que ele serve para fazer, em uma frase.
+    pub description: String,
+    pub content: String,
+    /// `builtin` (biblioteca embutida, somente leitura) ou `user`.
+    pub source: String,
+    pub slug: Option<String>,
+    pub project_id: Option<i32>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+/// Modelo criado pelo usuário. `source`/`slug` não são aceitos do cliente: o repositório grava
+/// sempre `user`/NULL, para que a UI não consiga forjar um modelo "embutido" — que é justamente
+/// a classe que o seed do startup apaga e reescreve.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct NewPromptTemplate {
+    pub name: String,
+    pub mode: String,
+    #[serde(default)]
+    pub category: String,
+    #[serde(default)]
+    pub description: String,
+    pub content: String,
+    pub project_id: Option<i32>,
+}
