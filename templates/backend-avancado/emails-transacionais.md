@@ -13,9 +13,9 @@ Implemente envio de e-mails transacionais no projeto **[nome do projeto]**.
 
 ## Inventário de e-mails (preencha um por linha)
 
-| E-mail | Gatilho (evento) | Dados dinâmicos |
-|---|---|---|
-| [boas-vindas] | [cadastro concluído] | [nome, link de ativação] |
+| E-mail           | Gatilho (evento)       | Dados dinâmicos                    |
+| ---------------- | ---------------------- | ---------------------------------- |
+| [boas-vindas]    | [cadastro concluído]   | [nome, link de ativação]           |
 | [reset de senha] | [solicitação de reset] | [nome, link com token e expiração] |
 
 ## Requisitos técnicos

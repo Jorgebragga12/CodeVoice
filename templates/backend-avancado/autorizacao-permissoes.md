@@ -13,10 +13,10 @@ Implemente autorização por papéis e permissões no projeto **[nome do projeto
 
 ## Matriz de acesso (preencha antes de codar)
 
-| Papel | Recurso | Ações permitidas |
-|---|---|---|
-| [admin] | [recurso] | [criar/ler/editar/excluir] |
-| [membro] | [recurso] | [ler/editar próprios] |
+| Papel    | Recurso   | Ações permitidas           |
+| -------- | --------- | -------------------------- |
+| [admin]  | [recurso] | [criar/ler/editar/excluir] |
+| [membro] | [recurso] | [ler/editar próprios]      |
 
 - Escopo dos dados: acesso é limitado por [organização/time/dono do recurso]? Papel certo + recurso de outra org = negado.
 - Se houver regra por atributo além do papel ([status do recurso, horário, plano]), descreva — isso é ABAC e muda o desenho da checagem.
