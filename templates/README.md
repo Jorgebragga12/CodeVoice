@@ -4,13 +4,23 @@ Modelos prontos para gerar prompts **sem depender do Claude CLI**. Cada arquivo 
 esqueleto de prompt: você escolhe o modelo, fala (ou cola) o pedido específico no lugar
 do marcador `<<SUA FALA>>`, ajusta os campos entre `[colchetes]` e copia o resultado.
 
+Desde a **Fase 7** estes arquivos são embutidos no binário e aparecem na aba **Modelos** do app:
+ao usar um modelo, o CodeVoice encaixa a transcrição no `<<SUA FALA>>` e preenche `[nome do
+projeto]` e `[comando de teste]` com os dados do projeto ativo. Este diretório continua sendo a
+fonte da verdade — editar um arquivo aqui e recompilar atualiza a biblioteca do app.
+
 ## Convenções
 
-- `<<SUA FALA>>` — onde entra a transcrição da sua voz (o pedido específico).
-- `[campo]` — valor que você preenche manualmente (nome do projeto, stack, prazo…).
+- `<<SUA FALA>>` — onde entra a transcrição da sua voz (o pedido específico). **Obrigatório**:
+  o parser rejeita modelo sem ele.
+- `[campo]` — valor que você preenche manualmente (stack, prazo, quantidade…). Exceções: o app
+  preenche `[nome do projeto]` e `[comando de teste]` sozinho quando há projeto ativo.
+- **Cabeçalho obrigatório** — as 4 primeiras linhas são metadado, e só o que vem depois do `---`
+  vira corpo do prompt: `# Título`, `> Modo: ... · Área: ...`, `> Uso: ...`, `---`.
 - **Modo** — um dos 10 modos do CodeVoice (`quick`, `technical`, `new_feature`, `bug_fix`,
-  `refactor`, `planning`, `code_review`, `ui_creation`, `db_change`, `clean_transcript`),
-  para quando estes modelos forem importados na tabela `prompt_templates` (Fase 7).
+  `refactor`, `planning`, `code_review`, `ui_creation`, `db_change`, `clean_transcript`).
+- **Categoria** — é o nome da **pasta**, não o campo `Área` (que é texto livre e não bate 1:1
+  com as pastas).
 - Modelos de tecnologia falam com um **agente de programação** (Claude Code ou similar).
   Modelos das demais áreas servem para qualquer LLM ou até como checklist manual.
 

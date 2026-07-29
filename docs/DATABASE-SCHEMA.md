@@ -56,11 +56,12 @@ CREATE TABLE project_rules (
 CREATE INDEX idx_project_rules_project ON project_rules(project_id);
 
 -- Modelos de prompt salvos pelo usuário ("salvar como modelo" no editor)
+-- ATENÇÃO: substituída pela migration 003 (ver §5) — esta é a forma original, da 001.
 CREATE TABLE prompt_templates (
   id          INTEGER PRIMARY KEY,
   name        TEXT NOT NULL,
   mode        TEXT NOT NULL,                -- ver CHECK de generated_prompts.mode
-  content     TEXT NOT NULL,                -- corpo com placeholders {{transcript}}, {{project_context}}
+  content     TEXT NOT NULL,
   project_id  INTEGER REFERENCES projects(id) ON DELETE SET NULL,  -- NULL = global
   created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
   updated_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
@@ -150,7 +151,56 @@ CREATE VIRTUAL TABLE history_fts USING fts5(
 
 A pesquisa do Histórico usa `history_fts MATCH ?` com join em `history_id`, combinado com filtros `project_id`/`mode`/`favorite` na `prompt_history`. Sanitização de caracteres especiais da query FTS5 fica para a Fase 8 (tela real de busca).
 
-## 5. Regras de integridade no código
+## 5. Biblioteca de modelos (migration 003_prompt_templates)
+
+A Fase 7 importou os **117 modelos** de `templates/` (18 categorias) para dentro do app. A tabela
+da 001 não comportava isso, e SQLite não tem `ALTER TABLE ADD CONSTRAINT`, então a 003 **recria**
+a tabela copiando as linhas existentes:
+
+```sql
+CREATE TABLE prompt_templates (
+  id          INTEGER PRIMARY KEY,
+  name        TEXT NOT NULL,
+  mode        TEXT NOT NULL CHECK (mode IN (   -- mesmo CHECK de generated_prompts.mode
+                'clean_transcript','quick','technical','new_feature','bug_fix',
+                'refactor','planning','code_review','ui_creation','db_change')),
+  category    TEXT NOT NULL DEFAULT '',        -- slug da pasta em templates/ (ex.: 'depuracao')
+  description TEXT NOT NULL DEFAULT '',        -- a linha "> Uso:" do modelo
+  content     TEXT NOT NULL,                   -- só o corpo, sem o cabeçalho de metadados
+  source      TEXT NOT NULL DEFAULT 'user' CHECK (source IN ('builtin','user')),
+  slug        TEXT,                            -- 'categoria/arquivo' nos builtin; NULL nos do usuário
+  project_id  INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+  created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+  updated_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+);
+CREATE UNIQUE INDEX idx_prompt_templates_slug ON prompt_templates(slug) WHERE slug IS NOT NULL;
+CREATE INDEX idx_prompt_templates_category ON prompt_templates(category);
+```
+
+**Origem das linhas.** `source = 'builtin'` são os 117 modelos embutidos no binário por `build.rs`
+(via `include_str!`); a cada startup eles são apagados e reinseridos a partir do binário, o que
+mantém banco e código em sincronia após um update — inclusive quando um modelo é renomeado ou
+removido. `source = 'user'` são os do "salvar como modelo": nunca tocados pelo seed, e os únicos
+que podem ser excluídos pela UI.
+
+**Categoria = pasta, não o campo `Área`.** Os arquivos declaram uma `Área` livre no cabeçalho, mas
+há 22 valores distintos para 18 pastas (`negocios-produto/` sozinha produz "negócios" e "produto").
+A pasta é o que casa com a navegação do repositório e com o índice do README.
+
+### 5.1 Convenção de placeholders
+
+Uma só, travada na Fase 7: **`<<SUA FALA>>`** marca onde entra a transcrição. A sintaxe
+`{{transcript}}`/`{{project_context}}`, documentada na versão 0.1 deste arquivo, nunca chegou a
+virar código e foi descartada — `<<SUA FALA>>` já está nos 117 arquivos versionados e é legível
+para quem lê os modelos direto no repositório.
+
+Além dela, `promptgen::library::render` substitui apenas os campos entre colchetes que o app tem
+como **dado** no banco: `[nome do projeto]` (`projects.name`) e `[comando de teste]`
+(`projects.test_commands`). Os outros ~560 campos entre colchetes da biblioteca são decisões do
+usuário (`[N]`, `[valor]`, `[período]`) e ficam **literais** — inclusive `[nome do projeto]` quando
+não há projeto ativo, porque um literal visível pede preenchimento e um vazio silencioso não.
+
+## 6. Regras de integridade no código
 
 - Repositórios expõem operações de alto nível (`save_flow(recording, transcription, prompt)`) em transação única — nunca metade do fluxo persistido.
 - `projects.path` é validado/canonicalizado antes de qualquer INSERT/UPDATE.

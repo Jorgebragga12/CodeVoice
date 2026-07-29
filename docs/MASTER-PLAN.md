@@ -14,7 +14,7 @@
 | 4    | Gravação de áudio      | 1          | 🟡 implementada — validação de voz c/ Jorge |
 | 5    | Transcrição Whisper    | 4          | ✅ concluída — ver PHASE-05-REPORT.md       |
 | 6    | Geração de prompts     | 3, 5       | ✅ concluída — ver PHASE-06-REPORT.md       |
-| 7    | Editor e refinamento   | 6          | ações de edição/refino + salvar modelo      |
+| 7    | Editor e refinamento   | 6          | ✅ concluída — ver PHASE-07-REPORT.md       |
 | 8    | Histórico              | 2, 6       | busca FTS, filtros, favoritos               |
 | 9    | Terminal e Claude Code | 6          | copiar/abrir terminal/colar sob ação        |
 | 10   | Polimento e instalador | todas      | bandeja, autostart, logs, instalador NSIS   |
@@ -109,12 +109,14 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 
 ### Fase 7 — Editor e refinamento
 
-**Escopo**: tela principal com transcrição original + prompt editável; ações: copiar, regenerar, encurtar, detalhar, deixar mais técnico, dividir em etapas (via `RefineAction` do PromptGenerator), desfazer (pilha em memória), salvar como modelo (`prompt_templates`); usar modelo salvo como base de geração.
+**Escopo**: tela principal com transcrição original + prompt editável; ações: copiar, regenerar, encurtar, detalhar, deixar mais técnico, dividir em etapas (via `RefineAction` do PromptGenerator), desfazer (pilha em memória), salvar como modelo (`prompt_templates`); usar modelo salvo como base de geração. **Acrescentado durante a fase**: importação da biblioteca de 117 modelos de `templates/` (migration 003).
 **Critérios de aceite**:
 
-- [ ] Editar → copiar → conteúdo do clipboard = editado; `updated_at`/`content` persistidos
-- [ ] Cada ação de refino altera o prompt de forma coerente; desfazer restaura estado anterior (≥10 níveis)
-- [ ] Modelo salvo aparece na lista e é utilizável em nova geração
+- [x] Editar → copiar → conteúdo do clipboard = editado; `updated_at`/`content` persistidos
+- [x] Cada ação de refino altera o prompt de forma coerente; desfazer restaura estado anterior (≥10 níveis)
+- [x] Modelo salvo aparece na lista e é utilizável em nova geração
+
+✅ **Concluída em 29/07/2026** — ver [PHASE-07-REPORT.md](PHASE-07-REPORT.md). A _qualidade_ da reescrita das 4 ações de refino só é observável em ambiente com sessão logada no `claude` CLI (o do Jorge); aqui o contrato foi validado e o fallback avisa quando não altera.
 
 ### Fase 8 — Histórico
 
