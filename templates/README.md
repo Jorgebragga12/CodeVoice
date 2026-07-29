@@ -14,7 +14,31 @@ do marcador `<<SUA FALA>>`, ajusta os campos entre `[colchetes]` e copia o resul
 - Modelos de tecnologia falam com um **agente de programação** (Claude Code ou similar).
   Modelos das demais áreas servem para qualquer LLM ou até como checklist manual.
 
-## Índice (105 modelos)
+## Índice (117 modelos)
+
+> As duas primeiras categorias — **depuração** e **fala rápida** — são as que mais combinam
+> com o uso por voz: você aperta o atalho no meio do trabalho e fala "tá dando esse erro" ou
+> "muda isso aqui". As demais servem melhor para empreitadas planejadas.
+
+### Depuração (`depuracao/`)
+| Modelo | Modo | Quando usar |
+|---|---|---|
+| [erro-agora](depuracao/erro-agora.md) | bug_fix | Quebrou agora, tenho o stack trace na tela |
+| [entender-erro](depuracao/entender-erro.md) | quick | Só entender a mensagem, sem corrigir ainda |
+| [build-nao-compila](depuracao/build-nao-compila.md) | bug_fix | Erro de compilação, linker ou toolchain |
+| [nao-reproduz-local](depuracao/nao-reproduz-local.md) | bug_fix | Quebra em produção e funciona na minha máquina |
+| [teste-flaky](depuracao/teste-flaky.md) | bug_fix | Teste que passa às vezes e falha às vezes |
+| [ta-lento](depuracao/ta-lento.md) | bug_fix | Ficou lento e ainda não sei o quê |
+| [race-condition](depuracao/race-condition.md) | bug_fix | Dado inconsistente ou trava com coisas simultâneas |
+| [conflito-dependencias](depuracao/conflito-dependencias.md) | bug_fix | Versões incompatíveis, lockfile quebrado |
+
+### Fala rápida (`fala-rapida/`)
+| Modelo | Modo | Quando usar |
+|---|---|---|
+| [ajuste-pontual](fala-rapida/ajuste-pontual.md) | quick | Mudança pequena e localizada, sem refatorar de brinde |
+| [me-explica](fala-rapida/me-explica.md) | quick | Entender um trecho antes de mexer |
+| [decidir-entre](fala-rapida/decidir-entre.md) | quick | Escolher entre opções sem abrir ADR formal |
+| [continuar-de-onde-parei](fala-rapida/continuar-de-onde-parei.md) | quick | Retomar trabalho de outra sessão |
 
 ### Desenvolvimento (`desenvolvimento/`)
 | Modelo | Modo | Quando usar |
