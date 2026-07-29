@@ -1,0 +1,5 @@
+# Revisões só de formatação, ignoradas pelo `git blame`.
+# Uso: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# chore(rust): aplica cargo fmt no src-tauri inteiro
+d477db080a4477dc6874e283d0e96a2522f793b2

@@ -143,10 +143,27 @@ pelo seed do startup seguinte.
 - As melhorias sugeridas no handoff (detectar modo pela fala, anexar log ao prompt, favoritos)
   continuam **fora** de escopo, sem decisão tomada.
 
-**Encontrado de passagem, não corrigido** (área alheia, ARCHITECTURE §9): `cargo clippy
---all-targets` falha com dois erros em `transcription/normalize.rs:106` (Fase 5) —
-`assert!(*s >= i16::MIN && *s <= i16::MAX)` é tautológico e o lint
-`absurd_extreme_comparisons` é `deny` por padrão. O teste passa, mas quem rodar clippy leva erro
-de compilação. Fora isso, `cargo fmt` nunca foi aplicado no repositório (o estilo é manual desde a
-Fase 1, com linhas de ~100 colunas) — os arquivos desta fase seguem o mesmo estilo, e rodar
-`cargo fmt` agora reformataria ~40 arquivos de todas as fases.
+## 8. Faxina do lado Rust (feita a pedido do Jorge, após a fase)
+
+Três problemas foram levantados ao fim da fase e resolvidos em seguida — nenhum deles é da Fase 7,
+mas todos travavam a ideia de "tudo verde de verdade":
+
+1. **`cargo clippy` não compilava.** `transcription/normalize.rs` (Fase 5) tinha
+   `assert!(*s >= i16::MIN && *s <= i16::MAX)`, sempre verdadeiro para um `i16`; o lint
+   `absurd_extreme_comparisons` é `deny` por padrão, então clippy falhava a compilação do lib
+   test. O teste `never_clips_after_normalizing` **não testava nada** — foi reescrito para o
+   invariante real: o pico após a normalização fica no alvo (~-3 dBFS) e nenhuma amostra troca de
+   sinal, que é como um wrap-around apareceria. Clippy agora passa com **zero warnings** em
+   `--all-targets`.
+
+2. **`cargo fmt` nunca tinha sido aplicado.** Rodado em todo o `src-tauri/` (29 arquivos,
+   +601/-195, nenhuma mudança de lógica), em commit isolado e registrado em
+   `.git-blame-ignore-revs` para não sujar o `git blame`. A largura padrão do rustfmt (100
+   colunas) já era a que o código seguia à mão, então o diff é só quebra de chamadas longas.
+
+3. **Checagens de Rust não eram acessíveis pelo `npm`**, o que ajuda a explicar por que passaram
+   despercebidas por 7 fases. Agora existem `lint:rust` (clippy com `-D warnings`),
+   `format:rust`, `format:rust:check` e `test:rust`, documentados no README junto das de TS.
+
+De quebra, o **README** ainda dizia "Fase 0 (fundação) concluída — apenas documentação; nenhum
+código de aplicação ainda", o que era falso desde a Fase 1.
