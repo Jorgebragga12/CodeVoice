@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { commands, type Recording } from "../../ipc/bindings";
 import { useProjectStore } from "../../stores/projectStore";
+import { usePromptStore } from "../../stores/promptStore";
 import { useTranscriptionStore } from "../../stores/transcriptionStore";
 import { formatDuration } from "../../lib/format";
 
@@ -14,6 +15,7 @@ export function RecordBar() {
   const load = useProjectStore((s) => s.load);
 
   const startTranscription = useTranscriptionStore((s) => s.start);
+  const resetPrompt = usePromptStore((s) => s.reset);
 
   const [activeProject, setActiveProject] = useState<number | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -30,12 +32,15 @@ export function RecordBar() {
     // `.catch` porque fora do runtime Tauri (ex.: ambiente de teste) `listen` rejeita — não
     // pode virar uma unhandled rejection.
     const unlisten = listen<Recording>("recording:stopped", (e) => {
+      // Limpa o prompt da gravação anterior: deixá-lo na tela ao lado de uma transcrição nova
+      // faria parecer que ele veio desta fala.
+      resetPrompt();
       void startTranscription(e.payload.id);
     }).catch(() => null);
     return () => {
       void unlisten.then((fn) => fn?.());
     };
-  }, [startTranscription]);
+  }, [startTranscription, resetPrompt]);
 
   useEffect(() => {
     let active = true;

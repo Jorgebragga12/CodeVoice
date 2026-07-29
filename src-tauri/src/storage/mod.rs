@@ -3,6 +3,7 @@ mod history_repo;
 mod migrations;
 mod project_repo;
 mod project_rule_repo;
+mod prompt_repo;
 mod recording_repo;
 mod transcription_repo;
 
@@ -10,6 +11,7 @@ pub use error::StorageError;
 pub use history_repo::HistoryRepo;
 pub use project_repo::ProjectRepo;
 pub use project_rule_repo::ProjectRuleRepo;
+pub use prompt_repo::PromptRepo;
 pub use recording_repo::RecordingRepo;
 pub use transcription_repo::TranscriptionRepo;
 

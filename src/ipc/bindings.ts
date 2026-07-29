@@ -88,6 +88,31 @@ export const commands = {
 	 *  worker do Tauri deixaria toda a UI sem resposta.
 	 */
 	transcribeRecording: (recordingId: number) => typedError<Transcription, string>(__TAURI_INVOKE("transcribe_recording", { recordingId })),
+	listPromptModes: () => typedError<PromptModeOption[], string>(__TAURI_INVOKE("list_prompt_modes")),
+	/**
+	 *  `true` se o comando `claude` existe no PATH. A UI usa para avisar que a geração vai cair no
+	 *  template antes mesmo de o usuário tentar.
+	 */
+	claudeCliAvailable: () => typedError<boolean, string>(__TAURI_INVOKE("claude_cli_available")),
+	/**
+	 *  Gera um prompt a partir de uma transcrição já salva e persiste o resultado.
+	 * 
+	 *  Roda em `spawn_blocking` porque o caminho do Claude CLI é um processo externo que pode
+	 *  levar dezenas de segundos — travaria a UI se rodasse no worker do Tauri.
+	 */
+	generatePrompt: (transcriptionId: number, mode: PromptMode) => typedError<GenerationResult, string>(__TAURI_INVOKE("generate_prompt", { transcriptionId, mode })),
+	/**
+	 *  Refina um prompt existente (encurtar/detalhar/mais técnico/dividir em etapas).
+	 * 
+	 *  Sem o Claude CLI não há refino determinístico possível — o gerador devolve o prompt intacto
+	 *  com um aviso, em vez de fingir que alterou.
+	 */
+	refinePrompt: (promptId: number, action: RefineAction) => typedError<GenerationResult, string>(__TAURI_INVOKE("refine_prompt", { promptId, action })),
+	/**
+	 *  Salva o texto editado pelo usuário (a edição livre é da Fase 7, mas o command já existe
+	 *  para o editor consumir).
+	 */
+	updatePromptContent: (promptId: number, content: string) => typedError<GeneratedPrompt, string>(__TAURI_INVOKE("update_prompt_content", { promptId, content })),
 };
 
 /* Types */
@@ -105,6 +130,31 @@ export type AudioDevice = {
  *  transcrever (ADR-001).
  */
 export type EngineStatus = { status: "model_missing" } | { status: "downloading"; percent: number } | { status: "ready" };
+
+/**
+ *  Prompt gerado. `content` é a versão atual (pode ter sido editada pelo usuário na Fase 7);
+ *  `original_content` guarda como saiu do gerador, para comparação/reversão.
+ */
+export type GeneratedPrompt = {
+	id: number,
+	transcription_id: number | null,
+	project_id: number | null,
+	/**  Valor de `PromptMode::as_db_str()`. */
+	mode: string,
+	/**  Valor de `PromptSource::as_db_str()` — `claude_cli` ou `template`. */
+	generator: string,
+	content: string,
+	original_content: string,
+	created_at: string,
+	updated_at: string,
+};
+
+/**  Resultado da geração para a UI: o prompt salvo + aviso de fallback, se houve. */
+export type GenerationResult = {
+	prompt: GeneratedPrompt,
+	/**  `Some` quando o Claude CLI falhou e o template foi usado — a UI mostra isso. */
+	fallback_reason: string | null,
+};
 
 /**  Resultado da importação assistida: nada foi salvo, é só um preview do que *seria* lido. */
 export type ImportPreview = {
@@ -188,6 +238,18 @@ export type ProjectUpdate = {
 	notes: string,
 };
 
+/**
+ *  Os 10 modos do gerador de prompts (PRODUCT-SPEC.md §5.4). A representação em banco é o
+ *  `as_db_str()` — mantém o `CHECK` da coluna `mode` em `generated_prompts`/`prompt_history`.
+ */
+export type PromptMode = "clean_transcript" | "quick" | "technical" | "new_feature" | "bug_fix" | "refactor" | "planning" | "code_review" | "ui_creation" | "db_change";
+
+export type PromptModeOption = {
+	id: PromptMode,
+	label: string,
+	description: string,
+};
+
 export type RecorderState = "idle" | "recording" | "stopped" | "cancelled";
 
 /**
@@ -223,6 +285,12 @@ export type RecordingStatus = {
 	state: RecorderState,
 	elapsed_ms: number,
 };
+
+/**
+ *  Ações de refino sobre um prompt já gerado (PRODUCT-SPEC §5.5). A Fase 7 (editor) as expõe
+ *  na UI; a definição vive aqui porque quem as executa é o gerador.
+ */
+export type RefineAction = "shorten" | "expand" | "more_technical" | "split_into_steps";
 
 export type Transcription = {
 	id: number,

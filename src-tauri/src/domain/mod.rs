@@ -113,6 +113,51 @@ impl PromptMode {
             Self::DbChange => "db_change",
         }
     }
+
+    /// Inverso de `as_db_str`, para reconstruir o modo a partir de uma linha do banco.
+    pub fn from_db_str(value: &str) -> Option<Self> {
+        Some(match value {
+            "clean_transcript" => Self::CleanTranscript,
+            "quick" => Self::Quick,
+            "technical" => Self::Technical,
+            "new_feature" => Self::NewFeature,
+            "bug_fix" => Self::BugFix,
+            "refactor" => Self::Refactor,
+            "planning" => Self::Planning,
+            "code_review" => Self::CodeReview,
+            "ui_creation" => Self::UiCreation,
+            "db_change" => Self::DbChange,
+            _ => return None,
+        })
+    }
+}
+
+#[cfg(test)]
+mod prompt_mode_tests {
+    use super::PromptMode;
+
+    #[test]
+    fn db_str_round_trips_for_every_mode() {
+        for mode in [
+            PromptMode::CleanTranscript,
+            PromptMode::Quick,
+            PromptMode::Technical,
+            PromptMode::NewFeature,
+            PromptMode::BugFix,
+            PromptMode::Refactor,
+            PromptMode::Planning,
+            PromptMode::CodeReview,
+            PromptMode::UiCreation,
+            PromptMode::DbChange,
+        ] {
+            assert_eq!(PromptMode::from_db_str(mode.as_db_str()), Some(mode));
+        }
+    }
+
+    #[test]
+    fn unknown_db_value_is_none() {
+        assert_eq!(PromptMode::from_db_str("modo_inventado"), None);
+    }
 }
 
 /// Quem gerou o prompt (coluna `generated_prompts.generator`). Nome evita colidir com a
@@ -207,4 +252,30 @@ pub struct NewTranscription {
     pub engine: String,
     pub model_name: String,
     pub duration_ms: i32,
+}
+
+/// Prompt gerado. `content` é a versão atual (pode ter sido editada pelo usuário na Fase 7);
+/// `original_content` guarda como saiu do gerador, para comparação/reversão.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct GeneratedPrompt {
+    pub id: i32,
+    pub transcription_id: Option<i32>,
+    pub project_id: Option<i32>,
+    /// Valor de `PromptMode::as_db_str()`.
+    pub mode: String,
+    /// Valor de `PromptSource::as_db_str()` — `claude_cli` ou `template`.
+    pub generator: String,
+    pub content: String,
+    pub original_content: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct NewGeneratedPrompt {
+    pub transcription_id: Option<i32>,
+    pub project_id: Option<i32>,
+    pub mode: String,
+    pub generator: String,
+    pub content: String,
 }

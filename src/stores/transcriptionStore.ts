@@ -21,6 +21,8 @@ interface TranscriptionState {
   text: string | null;
   error: string | null;
   recordingId: number | null;
+  /** Id da transcrição salva — a geração de prompt (Fase 6) parte daqui. */
+  transcriptionId: number | null;
 
   /** Inicia o fluxo para uma gravação recém-encerrada. */
   start: (recordingId: number) => Promise<void>;
@@ -44,7 +46,12 @@ async function runTranscription(
 
     const result = await commands.transcribeRecording(recordingId);
     if (result.status === "ok") {
-      set({ phase: "done", progress: 100, text: result.data.text });
+      set({
+        phase: "done",
+        progress: 100,
+        text: result.data.text,
+        transcriptionId: result.data.id,
+      });
     } else {
       set({ phase: "error", error: result.error });
     }
@@ -61,6 +68,7 @@ export const useTranscriptionStore = create<TranscriptionState>((set, get) => ({
   text: null,
   error: null,
   recordingId: null,
+  transcriptionId: null,
 
   async start(recordingId: number) {
     set({
@@ -69,6 +77,7 @@ export const useTranscriptionStore = create<TranscriptionState>((set, get) => ({
       text: null,
       error: null,
       recordingId,
+      transcriptionId: null,
     });
 
     const status = await commands.transcriptionStatus();
@@ -130,6 +139,13 @@ export const useTranscriptionStore = create<TranscriptionState>((set, get) => ({
   },
 
   reset() {
-    set({ phase: "idle", progress: 0, text: null, error: null, recordingId: null });
+    set({
+      phase: "idle",
+      progress: 0,
+      text: null,
+      error: null,
+      recordingId: null,
+      transcriptionId: null,
+    });
   },
 }));

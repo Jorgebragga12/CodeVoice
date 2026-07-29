@@ -43,6 +43,11 @@ pub fn run() {
         commands::transcription::transcription_status,
         commands::transcription::download_model,
         commands::transcription::transcribe_recording,
+        commands::promptgen::list_prompt_modes,
+        commands::promptgen::claude_cli_available,
+        commands::promptgen::generate_prompt,
+        commands::promptgen::refine_prompt,
+        commands::promptgen::update_prompt_content,
     ]);
 
     #[cfg(debug_assertions)]
@@ -97,6 +102,7 @@ pub fn run() {
             app.manage(storage::HistoryRepo::new(pool.clone()));
             app.manage(storage::RecordingRepo::new(pool.clone()));
             app.manage(storage::TranscriptionRepo::new(pool.clone()));
+            app.manage(storage::PromptRepo::new(pool.clone()));
             app.manage(commands::transcription::AppDataDir(app_data_dir.clone()));
 
             let settings = settings::SettingsRepo::new(pool);

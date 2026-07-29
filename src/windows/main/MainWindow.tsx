@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Projects } from "./Projects";
 import { RecordBar } from "./RecordBar";
 import { Settings } from "./Settings";
+import { PromptPanel } from "./PromptPanel";
 import { TranscriptionPanel } from "./TranscriptionPanel";
 
 type Tab = "projects" | "settings";
@@ -27,6 +28,7 @@ export function MainWindow() {
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
           <RecordBar />
           <TranscriptionPanel />
+          <PromptPanel />
           {tab === "projects" ? <Projects /> : <Settings />}
         </div>
       </main>

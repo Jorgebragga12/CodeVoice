@@ -13,7 +13,7 @@
 | 3    | Cadastro de projetos   | 2          | ✅ concluída — ver PHASE-03-REPORT.md       |
 | 4    | Gravação de áudio      | 1          | 🟡 implementada — validação de voz c/ Jorge |
 | 5    | Transcrição Whisper    | 4          | ✅ concluída — ver PHASE-05-REPORT.md       |
-| 6    | Geração de prompts     | 3, 5       | 10 modos funcionando (CLI + template)       |
+| 6    | Geração de prompts     | 3, 5       | ✅ concluída — ver PHASE-06-REPORT.md       |
 | 7    | Editor e refinamento   | 6          | ações de edição/refino + salvar modelo      |
 | 8    | Histórico              | 2, 6       | busca FTS, filtros, favoritos               |
 | 9    | Terminal e Claude Code | 6          | copiar/abrir terminal/colar sob ação        |
@@ -99,11 +99,13 @@ Ordem recomendada: sequencial. Fases 3↔4 podem inverter se conveniente (indepe
 **Fora do escopo padrão desta fase** (ADR-002b): `OpenAiGenerator` (ChatGPT via API) — só entra se o Jorge confirmar explicitamente antes do início da fase; se confirmado, adiciona escopo: chave de API da OpenAI via `keyring` (adiantada da Fase 10) + seletor de provedor em Settings.
 **Critérios de aceite**:
 
-- [ ] Cada um dos 10 modos gera saída a partir de transcrição real (CLI e template)
-- [ ] Prompt técnico contém as seções aplicáveis e omite vazias; contexto do projeto (stack/regras/proibições) presente
-- [ ] `claude` ausente do PATH → fallback para template com aviso, sem erro fatal
-- [ ] Nenhum texto de usuário em argv (testar com transcrição contendo `"; rm -rf` etc.)
-- [ ] Registro em `generated_prompts` + `prompt_history`
+- [x] Cada um dos 10 modos gera saída a partir de transcrição real (template validado por inspeção visual; CLI validado no contrato)
+- [x] Prompt técnico contém as seções aplicáveis e omite vazias; contexto do projeto (stack/regras/proibições) presente
+- [x] `claude` indisponível/não logado → fallback para template com aviso, sem erro fatal
+- [x] Nenhum texto de usuário em argv (testado com `"; rm -rf` — vai por stdin)
+- [x] Registro em `generated_prompts` + `prompt_history` (mesma transação + índice FTS)
+
+✅ **Concluída em 24/07/2026** — ver [PHASE-06-REPORT.md](PHASE-06-REPORT.md). A qualidade da reescrita via CLI só é observável em ambiente com sessão logada (o do Jorge); o caminho template foi validado integralmente aqui.
 
 ### Fase 7 — Editor e refinamento
 
