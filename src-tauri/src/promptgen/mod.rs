@@ -1,5 +1,6 @@
 pub mod claude_cli;
 pub mod context;
+pub mod library;
 pub mod modes;
 pub mod templates;
 
