@@ -124,11 +124,15 @@ pub fn validate_project_root(raw: &str) -> Result<PathBuf, PathValidationError> 
     // um valor não-re-validável, tratamos como o mesmo caso "não suportado" que caminhos UNC
     // brutos já são.
     if is_unc_or_verbatim(&canonical.to_string_lossy()) {
-        return Err(PathValidationError::UnsupportedUnc(canonical.display().to_string()));
+        return Err(PathValidationError::UnsupportedUnc(
+            canonical.display().to_string(),
+        ));
     }
 
     if !canonical.is_dir() {
-        return Err(PathValidationError::NotADirectory(canonical.display().to_string()));
+        return Err(PathValidationError::NotADirectory(
+            canonical.display().to_string(),
+        ));
     }
 
     Ok(canonical)
@@ -156,7 +160,10 @@ mod tests {
     #[test]
     fn rejects_empty_path() {
         assert_eq!(validate_project_root(""), Err(PathValidationError::Empty));
-        assert_eq!(validate_project_root("   "), Err(PathValidationError::Empty));
+        assert_eq!(
+            validate_project_root("   "),
+            Err(PathValidationError::Empty)
+        );
     }
 
     #[test]
@@ -173,7 +180,9 @@ mod tests {
         let err = validate_project_root(r"\\server\share\projeto");
         assert_eq!(
             err,
-            Err(PathValidationError::UnsupportedUnc(r"\\server\share\projeto".into()))
+            Err(PathValidationError::UnsupportedUnc(
+                r"\\server\share\projeto".into()
+            ))
         );
     }
 
@@ -290,7 +299,10 @@ mod tests {
         eprintln!("resultado para caminho com NUL embutido: {result:?}");
         // Não deve ser Ok apontando pra fora — ou falha (qualquer erro), ou (idealmente)
         // detecta a travessia mesmo com o NUL no meio.
-        assert!(result.is_err(), "caminho com NUL embutido não deveria validar com sucesso");
+        assert!(
+            result.is_err(),
+            "caminho com NUL embutido não deveria validar com sucesso"
+        );
     }
 
     /// ATAQUE ADVERSARIAL: travessia usando barra normal ("/") em vez de barra invertida,
@@ -334,7 +346,10 @@ mod tests {
     #[test]
     fn adversarial_verbatim_prefix_with_traversal_after_it() {
         let result = validate_project_root(r"\\?\C:\projects\..\..\Windows\System32");
-        assert!(matches!(result, Err(PathValidationError::UnsupportedUnc(_))));
+        assert!(matches!(
+            result,
+            Err(PathValidationError::UnsupportedUnc(_))
+        ));
     }
 
     /// ATAQUE ADVERSARIAL: caminho relativo à unidade (drive-relative, sem `\` após `C:`).
@@ -516,7 +531,9 @@ mod tests {
         let base = tempfile::tempdir().unwrap();
         let mut long_path = base.path().to_path_buf();
         for i in 0..10 {
-            long_path.push(format!("segmento-bem-comprido-numero-{i:02}-para-estourar-max-path"));
+            long_path.push(format!(
+                "segmento-bem-comprido-numero-{i:02}-para-estourar-max-path"
+            ));
         }
         assert!(
             long_path.to_string_lossy().len() > 260,
@@ -554,7 +571,9 @@ mod tests {
                 // chamada, em vez de aceito e quebrado depois.
             }
             Err(other) => {
-                panic!("esperava Ok (com invariante preservada) ou UnsupportedUnc, obteve: {other:?}");
+                panic!(
+                    "esperava Ok (com invariante preservada) ou UnsupportedUnc, obteve: {other:?}"
+                );
             }
         }
 

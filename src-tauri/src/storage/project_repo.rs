@@ -55,7 +55,8 @@ impl ProjectRepo {
             ],
         )?;
         let id = conn.last_insert_rowid() as i32;
-        self.get(id)?.ok_or_else(|| StorageError::NotFound(format!("project {id}")))
+        self.get(id)?
+            .ok_or_else(|| StorageError::NotFound(format!("project {id}")))
     }
 
     pub fn get(&self, id: i32) -> Result<Option<Project>, StorageError> {
@@ -71,7 +72,8 @@ impl ProjectRepo {
         let sql = format!("SELECT {SELECT_COLUMNS} FROM projects ORDER BY name COLLATE NOCASE");
         let mut stmt = conn.prepare(&sql)?;
         let rows = stmt.query_map([], row_to_project)?;
-        rows.collect::<rusqlite::Result<Vec<_>>>().map_err(Into::into)
+        rows.collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(Into::into)
     }
 
     pub fn update(&self, id: i32, input: &ProjectUpdate) -> Result<Project, StorageError> {
@@ -97,7 +99,8 @@ impl ProjectRepo {
             return Err(StorageError::NotFound(format!("project {id}")));
         }
         drop(conn);
-        self.get(id)?.ok_or_else(|| StorageError::NotFound(format!("project {id}")))
+        self.get(id)?
+            .ok_or_else(|| StorageError::NotFound(format!("project {id}")))
     }
 
     pub fn delete(&self, id: i32) -> Result<(), StorageError> {
@@ -194,17 +197,20 @@ mod tests {
     fn update_missing_project_returns_not_found() {
         let db = test_pool();
         let repo = ProjectRepo::new(db.pool.clone());
-        let err = repo.update(9999, &ProjectUpdate {
-            name: "x".into(),
-            description: String::new(),
-            stack: String::new(),
-            architecture: String::new(),
-            dev_commands: String::new(),
-            test_commands: String::new(),
-            forbidden_tech: String::new(),
-            database_info: String::new(),
-            notes: String::new(),
-        });
+        let err = repo.update(
+            9999,
+            &ProjectUpdate {
+                name: "x".into(),
+                description: String::new(),
+                stack: String::new(),
+                architecture: String::new(),
+                dev_commands: String::new(),
+                test_commands: String::new(),
+                forbidden_tech: String::new(),
+                database_info: String::new(),
+                notes: String::new(),
+            },
+        );
         assert!(matches!(err, Err(StorageError::NotFound(_))));
     }
 
@@ -271,10 +277,15 @@ mod tests {
         assert_eq!(remaining_project_id, None);
 
         let row_count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM prompt_history WHERE id = ?1", params![history_id], |row| {
-                row.get(0)
-            })
+            .query_row(
+                "SELECT COUNT(*) FROM prompt_history WHERE id = ?1",
+                params![history_id],
+                |row| row.get(0),
+            )
             .unwrap();
-        assert_eq!(row_count, 1, "a linha do histórico não deveria ter sido removida");
+        assert_eq!(
+            row_count, 1,
+            "a linha do histórico não deveria ter sido removida"
+        );
     }
 }

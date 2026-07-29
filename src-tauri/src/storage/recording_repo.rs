@@ -205,10 +205,14 @@ mod tests {
         let created = repo.create(&input).unwrap();
 
         let conn = db.pool.get().unwrap();
-        conn.execute("DELETE FROM projects WHERE id = 1", []).unwrap();
+        conn.execute("DELETE FROM projects WHERE id = 1", [])
+            .unwrap();
         drop(conn);
 
         let after = repo.get(created.id).unwrap().unwrap();
-        assert!(after.project_id.is_none(), "ON DELETE SET NULL deveria preservar a gravação");
+        assert!(
+            after.project_id.is_none(),
+            "ON DELETE SET NULL deveria preservar a gravação"
+        );
     }
 }

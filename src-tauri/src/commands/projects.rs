@@ -1,6 +1,8 @@
 use tauri::State;
 
-use crate::domain::{NewProject, NewProjectRule, Project, ProjectRule, ProjectRuleUpdate, ProjectUpdate};
+use crate::domain::{
+    NewProject, NewProjectRule, Project, ProjectRule, ProjectRuleUpdate, ProjectUpdate,
+};
 use crate::security::path_validation;
 use crate::storage::{ProjectRepo, ProjectRuleRepo, StorageError};
 
@@ -25,8 +27,12 @@ pub fn get_project(repo: State<'_, ProjectRepo>, id: i32) -> Result<Option<Proje
 /// ou `preview_project_import` antes (defesa em profundidade, o backend nunca confia no frontend).
 #[tauri::command]
 #[specta::specta]
-pub fn create_project(repo: State<'_, ProjectRepo>, mut input: NewProject) -> Result<Project, String> {
-    let canonical = path_validation::validate_project_root(&input.path).map_err(|e| e.to_string())?;
+pub fn create_project(
+    repo: State<'_, ProjectRepo>,
+    mut input: NewProject,
+) -> Result<Project, String> {
+    let canonical =
+        path_validation::validate_project_root(&input.path).map_err(|e| e.to_string())?;
     input.path = canonical.display().to_string();
     repo.create(&input).map_err(err_to_string)
 }
@@ -92,5 +98,6 @@ pub fn reorder_project_rules(
     project_id: i32,
     ordered_ids: Vec<i32>,
 ) -> Result<(), String> {
-    repo.reorder(project_id, &ordered_ids).map_err(err_to_string)
+    repo.reorder(project_id, &ordered_ids)
+        .map_err(err_to_string)
 }

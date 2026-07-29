@@ -5,7 +5,13 @@ use super::modes::{spec_for, Section};
 
 /// Hesitações comuns da fala em PT que não agregam nada ao prompt.
 const FILLERS: &[&str] = &[
-    " né ", " tipo assim ", " tipo, ", " ãã ", " ahn ", " hmm ", " então assim ",
+    " né ",
+    " tipo assim ",
+    " tipo, ",
+    " ãã ",
+    " ahn ",
+    " hmm ",
+    " então assim ",
 ];
 
 /// Limpeza determinística da transcrição: remove hesitações, colapsa espaços e garante
@@ -131,7 +137,10 @@ fn render_section(section: Section, transcript: &str, ctx: &ProjectContext) -> S
             } else {
                 let mut body = String::new();
                 if !ctx.stack.trim().is_empty() {
-                    body.push_str(&format!("- Manter a stack do projeto: {}\n", ctx.stack.trim()));
+                    body.push_str(&format!(
+                        "- Manter a stack do projeto: {}\n",
+                        ctx.stack.trim()
+                    ));
                 }
                 if !ctx.architecture.trim().is_empty() {
                     body.push_str(&format!(
@@ -178,7 +187,10 @@ mod tests {
         assert!(!out.to_lowercase().contains(" né "));
         assert!(!out.to_lowercase().contains("então assim"));
         assert!(out.ends_with('.'));
-        assert!(out.starts_with('E'), "primeira letra deveria ser maiúscula: {out}");
+        assert!(
+            out.starts_with('E'),
+            "primeira letra deveria ser maiúscula: {out}"
+        );
     }
 
     #[test]
@@ -219,14 +231,21 @@ mod tests {
         let out = generate(PromptMode::Technical, "fazer algo", &ctx());
         assert!(out.contains("CodeVoice"), "faltou o nome do projeto");
         assert!(out.contains("Tauri, React"), "faltou a stack");
-        assert!(out.contains("Sempre rodar lint"), "faltou a regra do projeto");
+        assert!(
+            out.contains("Sempre rodar lint"),
+            "faltou a regra do projeto"
+        );
         assert!(out.contains("jQuery"), "faltou a tecnologia proibida");
         assert!(out.contains("cargo test"), "faltou o comando de teste");
     }
 
     #[test]
     fn omits_empty_sections_when_there_is_no_project() {
-        let out = generate(PromptMode::Technical, "fazer algo", &ProjectContext::default());
+        let out = generate(
+            PromptMode::Technical,
+            "fazer algo",
+            &ProjectContext::default(),
+        );
         // Sem projeto não há contexto para renderizar — a seção não deve aparecer vazia.
         assert!(!out.contains("## Contexto do projeto"));
         // Mas o objetivo continua lá.

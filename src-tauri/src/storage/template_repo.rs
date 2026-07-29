@@ -86,7 +86,8 @@ impl PromptTemplateRepo {
         );
         let mut stmt = conn.prepare(&sql)?;
         let rows = stmt.query_map([], row_to_template)?;
-        rows.collect::<rusqlite::Result<Vec<_>>>().map_err(Into::into)
+        rows.collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(Into::into)
     }
 
     pub fn list_by_category(&self, category: &str) -> Result<Vec<PromptTemplate>, StorageError> {
@@ -96,7 +97,8 @@ impl PromptTemplateRepo {
         );
         let mut stmt = conn.prepare(&sql)?;
         let rows = stmt.query_map(params![category], row_to_template)?;
-        rows.collect::<rusqlite::Result<Vec<_>>>().map_err(Into::into)
+        rows.collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(Into::into)
     }
 
     /// Categorias existentes com a contagem de modelos, para montar a navegação da biblioteca.
@@ -106,7 +108,8 @@ impl PromptTemplateRepo {
             "SELECT category, COUNT(*) FROM prompt_templates GROUP BY category ORDER BY category",
         )?;
         let rows = stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?;
-        rows.collect::<rusqlite::Result<Vec<_>>>().map_err(Into::into)
+        rows.collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(Into::into)
     }
 
     pub fn get(&self, id: i32) -> Result<Option<PromptTemplate>, StorageError> {
@@ -211,7 +214,11 @@ mod tests {
         repo.replace_builtins(&items).unwrap();
         repo.replace_builtins(&items).unwrap();
 
-        assert_eq!(repo.list().unwrap().len(), 1, "o slug único impediria o duplicado");
+        assert_eq!(
+            repo.list().unwrap().len(),
+            1,
+            "o slug único impediria o duplicado"
+        );
     }
 
     #[test]
@@ -227,7 +234,12 @@ mod tests {
         repo.replace_builtins(&[builtin("depuracao/erro-agora", "depuracao", "Erro agora")])
             .unwrap();
 
-        let slugs: Vec<_> = repo.list().unwrap().into_iter().filter_map(|t| t.slug).collect();
+        let slugs: Vec<_> = repo
+            .list()
+            .unwrap()
+            .into_iter()
+            .filter_map(|t| t.slug)
+            .collect();
         assert_eq!(slugs, vec!["depuracao/erro-agora"]);
     }
 
@@ -272,7 +284,10 @@ mod tests {
         let categories = repo.categories().unwrap();
         assert_eq!(
             categories,
-            vec![("depuracao".to_string(), 2), ("testes-avancados".to_string(), 1)]
+            vec![
+                ("depuracao".to_string(), 2),
+                ("testes-avancados".to_string(), 1)
+            ]
         );
     }
 
@@ -299,7 +314,10 @@ mod tests {
             repo.delete_user_template(builtin_id),
             Err(StorageError::NotFound(_))
         ));
-        assert!(repo.get(builtin_id).unwrap().is_some(), "o embutido tem que continuar lá");
+        assert!(
+            repo.get(builtin_id).unwrap().is_some(),
+            "o embutido tem que continuar lá"
+        );
     }
 
     /// Fecha o circuito parser → migration 003 → repositório com a biblioteca real, não com
@@ -319,8 +337,16 @@ mod tests {
 
         let stored = repo.list().unwrap();
         for template in &stored {
-            assert!(!template.content.contains("> Modo:"), "{} com metadado no corpo", template.name);
-            assert!(!template.description.is_empty(), "{} sem descrição", template.name);
+            assert!(
+                !template.content.contains("> Modo:"),
+                "{} com metadado no corpo",
+                template.name
+            );
+            assert!(
+                !template.description.is_empty(),
+                "{} sem descrição",
+                template.name
+            );
         }
 
         let sample = stored

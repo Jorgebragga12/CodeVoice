@@ -99,7 +99,10 @@ impl SettingsRepo {
     ) -> Result<(), StorageError> {
         self.set_raw(KEY_MICROPHONE, settings.microphone.as_deref().unwrap_or(""))?;
         self.set_raw(KEY_HOTKEY, &settings.hotkey)?;
-        self.set_raw(KEY_KEEP_AUDIO, if settings.keep_audio { "true" } else { "false" })?;
+        self.set_raw(
+            KEY_KEEP_AUDIO,
+            if settings.keep_audio { "true" } else { "false" },
+        )?;
         self.set_raw(KEY_WHISPER_MODEL, &settings.whisper_model)?;
         Ok(())
     }
@@ -146,14 +149,18 @@ mod tests {
         let db = test_pool();
         let repo = SettingsRepo::new(db.pool.clone());
 
-        repo.save_recording_settings(&RecordingSettings::default()).unwrap();
+        repo.save_recording_settings(&RecordingSettings::default())
+            .unwrap();
         repo.save_recording_settings(&RecordingSettings {
             hotkey: "CmdOrCtrl+Alt+R".into(),
             ..Default::default()
         })
         .unwrap();
 
-        assert_eq!(repo.get_recording_settings().unwrap().hotkey, "CmdOrCtrl+Alt+R");
+        assert_eq!(
+            repo.get_recording_settings().unwrap().hotkey,
+            "CmdOrCtrl+Alt+R"
+        );
     }
 
     #[test]
@@ -177,6 +184,9 @@ mod tests {
         // Um atalho vazio deixaria o app sem forma de gravar por teclado.
         repo.set_raw(KEY_HOTKEY, "").unwrap();
 
-        assert_eq!(repo.get_recording_settings().unwrap().hotkey, DEFAULT_HOTKEY);
+        assert_eq!(
+            repo.get_recording_settings().unwrap().hotkey,
+            DEFAULT_HOTKEY
+        );
     }
 }

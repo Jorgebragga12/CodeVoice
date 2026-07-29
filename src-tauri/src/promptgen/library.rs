@@ -193,7 +193,10 @@ mod tests {
         let parsed = parse(SAMPLE).unwrap();
         assert_eq!(parsed.name, "Erro agora (colar stack trace)");
         assert_eq!(parsed.mode, "bug_fix");
-        assert_eq!(parsed.description, "quebrou agora, tenho a mensagem de erro na tela.");
+        assert_eq!(
+            parsed.description,
+            "quebrou agora, tenho a mensagem de erro na tela."
+        );
     }
 
     /// O ponto principal do parser: o metadado não pode vazar para o corpo do prompt.
@@ -225,7 +228,10 @@ mod tests {
     #[test]
     fn category_comes_from_the_folder() {
         assert_eq!(category_of("depuracao/erro-agora"), "depuracao");
-        assert_eq!(category_of("negocios-produto/analise-concorrencia"), "negocios-produto");
+        assert_eq!(
+            category_of("negocios-produto/analise-concorrencia"),
+            "negocios-produto"
+        );
     }
 
     #[test]
@@ -241,7 +247,11 @@ mod tests {
     /// lembrete de preencher; um vazio silencioso vira um prompt pela metade.
     #[test]
     fn render_keeps_literals_when_there_is_no_project_data() {
-        let out = render(&parse(SAMPLE).unwrap().content, "algo", &ProjectContext::default());
+        let out = render(
+            &parse(SAMPLE).unwrap().content,
+            "algo",
+            &ProjectContext::default(),
+        );
         assert!(out.contains("[nome do projeto]"));
         assert!(out.contains("[comando de teste]"));
     }
@@ -275,7 +285,10 @@ mod tests {
         for (slug, markdown) in EMBEDDED_TEMPLATES {
             let parsed = parse(markdown).unwrap_or_else(|| panic!("{slug} não parseou"));
             assert!(!parsed.name.trim().is_empty(), "{slug} sem título");
-            assert!(!parsed.description.trim().is_empty(), "{slug} sem linha `> Uso:`");
+            assert!(
+                !parsed.description.trim().is_empty(),
+                "{slug} sem linha `> Uso:`"
+            );
             assert!(
                 PromptMode::from_db_str(&parsed.mode).is_some(),
                 "{slug} com modo inválido: {}",
@@ -300,7 +313,11 @@ mod tests {
         let mut categories: Vec<_> = items.iter().map(|t| t.category.clone()).collect();
         categories.sort();
         categories.dedup();
-        assert_eq!(categories.len(), 18, "categorias encontradas: {categories:?}");
+        assert_eq!(
+            categories.len(),
+            18,
+            "categorias encontradas: {categories:?}"
+        );
         assert!(categories.contains(&"depuracao".to_string()));
     }
 

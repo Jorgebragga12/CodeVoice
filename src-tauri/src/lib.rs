@@ -57,7 +57,10 @@ pub fn run() {
 
     #[cfg(debug_assertions)]
     specta_builder
-        .export(specta_typescript::Typescript::default(), "../src/ipc/bindings.ts")
+        .export(
+            specta_typescript::Typescript::default(),
+            "../src/ipc/bindings.ts",
+        )
         .expect("falha ao exportar bindings TypeScript");
 
     tauri::Builder::default()
@@ -100,7 +103,10 @@ pub fn run() {
         .setup(move |app| {
             specta_builder.mount_events(app);
 
-            let app_data_dir = app.path().app_data_dir().expect("sem app_data_dir resolvido");
+            let app_data_dir = app
+                .path()
+                .app_data_dir()
+                .expect("sem app_data_dir resolvido");
             let pool = storage::init_pool(&app_data_dir).expect("falha ao inicializar o banco");
             app.manage(storage::ProjectRepo::new(pool.clone()));
             app.manage(storage::ProjectRuleRepo::new(pool.clone()));

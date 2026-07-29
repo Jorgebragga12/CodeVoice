@@ -98,7 +98,9 @@ pub fn generate(full_prompt: &str) -> Result<String, PromptGenError> {
 
     let text = parsed.result.trim().to_string();
     if text.is_empty() {
-        return Err(PromptGenError::Cli("o CLI devolveu uma resposta vazia".into()));
+        return Err(PromptGenError::Cli(
+            "o CLI devolveu uma resposta vazia".into(),
+        ));
     }
     Ok(text)
 }
@@ -148,7 +150,10 @@ mod tests {
         // Formato real observado no CLI 2.1.201 quando a sessão não está logada.
         let json = r#"{"type":"result","subtype":"success","is_error":true,"result":"Not logged in · Please run /login"}"#;
         let parsed: CliResponse = serde_json::from_str(json).unwrap();
-        assert!(parsed.is_error, "is_error precisa ser respeitado mesmo com exit 0");
+        assert!(
+            parsed.is_error,
+            "is_error precisa ser respeitado mesmo com exit 0"
+        );
         assert!(parsed.result.contains("Not logged in"));
     }
 

@@ -55,7 +55,10 @@ pub enum ScanError {
     #[error(transparent)]
     Path(#[from] PathValidationError),
     #[error("erro de I/O em {path}: {source}")]
-    Io { path: String, source: std::io::Error },
+    Io {
+        path: String,
+        source: std::io::Error,
+    },
 }
 
 /// Um arquivo lido pela importação assistida (só arquivos da allowlist chegam aqui).
@@ -106,14 +109,22 @@ fn is_denied_by_name(name: &str) -> bool {
     if lower.starts_with("id_rsa") {
         return true;
     }
-    if DENYLISTED_NAME_SUBSTRINGS.iter().any(|needle| lower.contains(needle)) {
+    if DENYLISTED_NAME_SUBSTRINGS
+        .iter()
+        .any(|needle| lower.contains(needle))
+    {
         return true;
     }
-    DENYLISTED_SUFFIXES.iter().any(|suffix| lower.ends_with(suffix))
+    DENYLISTED_SUFFIXES
+        .iter()
+        .any(|suffix| lower.ends_with(suffix))
 }
 
 fn relative_path(root: &Path, full: &Path) -> String {
-    full.strip_prefix(root).unwrap_or(full).to_string_lossy().replace('\\', "/")
+    full.strip_prefix(root)
+        .unwrap_or(full)
+        .to_string_lossy()
+        .replace('\\', "/")
 }
 
 /// Detecta se `file` corresponde a um arquivo com mais de um "hard link" — outro nome de
@@ -148,9 +159,7 @@ fn has_multiple_hard_links(file: &std::fs::File) -> bool {
     // SAFETY: `file.as_raw_handle()` é um HANDLE válido e aberto (o `File` ainda vive nesse
     // escopo, então o handle não foi fechado) e `info` é um buffer de saída do tamanho exato
     // esperado pela API, alocado logo acima.
-    let ok = unsafe {
-        GetFileInformationByHandle(file.as_raw_handle() as _, &mut info as *mut _)
-    };
+    let ok = unsafe { GetFileInformationByHandle(file.as_raw_handle() as _, &mut info as *mut _) };
     ok != 0 && info.nNumberOfLinks > 1
 }
 
@@ -175,8 +184,10 @@ pub fn scan_project(root_raw: &str) -> Result<ImportPreview, ScanError> {
     // A raiz precisa ser legível; erros em subdiretórios mais fundo (permissão negada, etc.)
     // são ignorados silenciosamente por `walk` — uma subpasta problemática não deve derrubar
     // o preview inteiro.
-    std::fs::read_dir(&root)
-        .map_err(|source| ScanError::Io { path: root.display().to_string(), source })?;
+    std::fs::read_dir(&root).map_err(|source| ScanError::Io {
+        path: root.display().to_string(),
+        source,
+    })?;
 
     let mut files = Vec::new();
     let mut directories = Vec::new();
@@ -185,7 +196,11 @@ pub fn scan_project(root_raw: &str) -> Result<ImportPreview, ScanError> {
     files.sort_by(|a, b| a.relative_path.cmp(&b.relative_path));
     directories.sort();
 
-    Ok(ImportPreview { root: root.display().to_string(), files, directories })
+    Ok(ImportPreview {
+        root: root.display().to_string(),
+        files,
+        directories,
+    })
 }
 
 /// Percorre `dir` (que está a `depth` níveis da raiz) coletando arquivos permitidos e nomes de
@@ -204,7 +219,9 @@ fn walk(
 
     for entry in entries.flatten() {
         let name = entry.file_name().to_string_lossy().into_owned();
-        let Ok(file_type) = entry.file_type() else { continue };
+        let Ok(file_type) = entry.file_type() else {
+            continue;
+        };
 
         if file_type.is_dir() {
             if is_denylisted_dir(&name) {
@@ -243,8 +260,12 @@ fn walk(
 
         // Abre um único handle e reusa pra metadata, checagem de hardlink e leitura — evita
         // reabrir o arquivo (e uma pequena janela TOCTOU) entre essas três operações.
-        let Ok(mut file) = std::fs::File::open(&real_path) else { continue };
-        let Ok(metadata) = file.metadata() else { continue };
+        let Ok(mut file) = std::fs::File::open(&real_path) else {
+            continue;
+        };
+        let Ok(metadata) = file.metadata() else {
+            continue;
+        };
         if !metadata.is_file() || metadata.len() > MAX_FILE_SIZE_BYTES {
             continue;
         }
@@ -253,9 +274,13 @@ fn walk(
         }
 
         let mut bytes = Vec::new();
-        let Ok(_) = std::io::Read::read_to_end(&mut file, &mut bytes) else { continue };
+        let Ok(_) = std::io::Read::read_to_end(&mut file, &mut bytes) else {
+            continue;
+        };
         // Não-UTF8 é tratado como binário/mídia e descartado (a allowlist só cobre texto).
-        let Ok(content) = String::from_utf8(bytes) else { continue };
+        let Ok(content) = String::from_utf8(bytes) else {
+            continue;
+        };
 
         files.push(ImportedFile {
             relative_path: relative_path(root, &entry.path()),
@@ -284,7 +309,11 @@ mod tests {
         write_file(&dir.path().join("README.md"), "# projeto");
 
         let preview = scan_project(dir.path().to_str().unwrap()).unwrap();
-        let names: Vec<_> = preview.files.iter().map(|f| f.relative_path.as_str()).collect();
+        let names: Vec<_> = preview
+            .files
+            .iter()
+            .map(|f| f.relative_path.as_str())
+            .collect();
 
         assert!(names.contains(&"README.md"));
         assert!(!names.iter().any(|n| n.to_lowercase().contains(".env")));
@@ -298,7 +327,11 @@ mod tests {
         write_file(&dir.path().join("package.json"), "{\"name\":\"codevoice\"}");
 
         let preview = scan_project(dir.path().to_str().unwrap()).unwrap();
-        let names: Vec<_> = preview.files.iter().map(|f| f.relative_path.as_str()).collect();
+        let names: Vec<_> = preview
+            .files
+            .iter()
+            .map(|f| f.relative_path.as_str())
+            .collect();
 
         assert!(names.contains(&"package.json"));
         assert!(!names.contains(&"secrets.json"));
@@ -308,13 +341,19 @@ mod tests {
     #[test]
     fn rejects_path_with_traversal_segment() {
         let err = scan_project(r"C:\projects\..\Windows");
-        assert!(matches!(err, Err(ScanError::Path(PathValidationError::Traversal))));
+        assert!(matches!(
+            err,
+            Err(ScanError::Path(PathValidationError::Traversal))
+        ));
     }
 
     #[test]
     fn rejects_unc_path() {
         let err = scan_project(r"\\server\share\projeto");
-        assert!(matches!(err, Err(ScanError::Path(PathValidationError::UnsupportedUnc(_)))));
+        assert!(matches!(
+            err,
+            Err(ScanError::Path(PathValidationError::UnsupportedUnc(_)))
+        ));
     }
 
     #[test]
@@ -325,9 +364,16 @@ mod tests {
         write_file(&dir.path().join("README.md"), "# pequeno o suficiente");
 
         let preview = scan_project(dir.path().to_str().unwrap()).unwrap();
-        let names: Vec<_> = preview.files.iter().map(|f| f.relative_path.as_str()).collect();
+        let names: Vec<_> = preview
+            .files
+            .iter()
+            .map(|f| f.relative_path.as_str())
+            .collect();
 
-        assert!(!names.contains(&"package.json"), "arquivo > 512KB deveria ser ignorado");
+        assert!(
+            !names.contains(&"package.json"),
+            "arquivo > 512KB deveria ser ignorado"
+        );
         assert!(names.contains(&"README.md"));
     }
 
@@ -354,7 +400,10 @@ mod tests {
         }
 
         let preview = scan_project(project.path().to_str().unwrap()).unwrap();
-        assert!(preview.files.is_empty(), "symlink apontando pra fora não deveria ser importado");
+        assert!(
+            preview.files.is_empty(),
+            "symlink apontando pra fora não deveria ser importado"
+        );
     }
 
     #[cfg(windows)]
@@ -397,19 +446,27 @@ mod tests {
             .find(|e| e.file_name() == "link_dir")
             .map(|e| e.file_type().unwrap().is_symlink())
             .unwrap();
-        eprintln!(
-            "DEBUG: DirEntry::file_type().is_symlink() para a junction = {entry_is_symlink}"
-        );
+        eprintln!("DEBUG: DirEntry::file_type().is_symlink() para a junction = {entry_is_symlink}");
 
         let preview = scan_project(project.path().to_str().unwrap()).unwrap();
-        let names: Vec<_> = preview.files.iter().map(|f| f.relative_path.as_str()).collect();
+        let names: Vec<_> = preview
+            .files
+            .iter()
+            .map(|f| f.relative_path.as_str())
+            .collect();
 
         assert!(
-            !names.iter().any(|n| n.replace('\\', "/") == "link_dir/README.md"),
+            !names
+                .iter()
+                .any(|n| n.replace('\\', "/") == "link_dir/README.md"),
             "BYPASS CONFIRMADO: scan_project leu {:?} através de uma directory junction, \
              vazando conteúdo de fora da raiz do projeto: {:?}",
             names,
-            preview.files.iter().find(|f| f.relative_path.contains("README.md")).map(|f| &f.content)
+            preview
+                .files
+                .iter()
+                .find(|f| f.relative_path.contains("README.md"))
+                .map(|f| &f.content)
         );
     }
 
@@ -423,7 +480,10 @@ mod tests {
 
         assert!(preview.directories.iter().any(|d| d == "src"));
         assert!(preview.directories.iter().any(|d| d == "src/components"));
-        assert!(!preview.directories.iter().any(|d| d.contains("node_modules")));
+        assert!(!preview
+            .directories
+            .iter()
+            .any(|d| d.contains("node_modules")));
     }
 
     /// REGRESSÃO (revisão adversarial): `is_denylisted_dir` só comparava o nome do diretório
@@ -435,35 +495,64 @@ mod tests {
     #[test]
     fn regression_directory_with_sensitive_name_is_not_listed_nor_walked_into() {
         let dir = tempfile::tempdir().unwrap();
-        write_file(&dir.path().join("secrets/package.json"), "{\"leaked\":true}");
-        write_file(&dir.path().join(".credentials/README.md"), "# não deveria vazar");
+        write_file(
+            &dir.path().join("secrets/package.json"),
+            "{\"leaked\":true}",
+        );
+        write_file(
+            &dir.path().join(".credentials/README.md"),
+            "# não deveria vazar",
+        );
         // Controle: um diretório comum continua listado e percorrido normalmente.
         write_file(&dir.path().join("src/README.md"), "# ok");
 
         let preview = scan_project(dir.path().to_str().unwrap()).unwrap();
 
         assert!(
-            !preview.directories.iter().any(|d| d.to_lowercase().contains("secret")),
+            !preview
+                .directories
+                .iter()
+                .any(|d| d.to_lowercase().contains("secret")),
             "BYPASS CONFIRMADO: nome de diretório sensível apareceu no preview: {:?}",
             preview.directories
         );
         assert!(
-            !preview.directories.iter().any(|d| d.to_lowercase().contains("credential")),
+            !preview
+                .directories
+                .iter()
+                .any(|d| d.to_lowercase().contains("credential")),
             "BYPASS CONFIRMADO: nome de diretório sensível apareceu no preview: {:?}",
             preview.directories
         );
         assert!(
-            !preview.files.iter().any(|f| f.relative_path.starts_with("secrets/")),
+            !preview
+                .files
+                .iter()
+                .any(|f| f.relative_path.starts_with("secrets/")),
             "BYPASS CONFIRMADO: arquivo dentro de diretório 'secrets/' foi lido: {:?}",
-            preview.files.iter().map(|f| &f.relative_path).collect::<Vec<_>>()
+            preview
+                .files
+                .iter()
+                .map(|f| &f.relative_path)
+                .collect::<Vec<_>>()
         );
         assert!(
-            !preview.files.iter().any(|f| f.relative_path.starts_with(".credentials/")),
+            !preview
+                .files
+                .iter()
+                .any(|f| f.relative_path.starts_with(".credentials/")),
             "BYPASS CONFIRMADO: arquivo dentro de diretório '.credentials/' foi lido: {:?}",
-            preview.files.iter().map(|f| &f.relative_path).collect::<Vec<_>>()
+            preview
+                .files
+                .iter()
+                .map(|f| &f.relative_path)
+                .collect::<Vec<_>>()
         );
         assert!(preview.directories.iter().any(|d| d == "src"));
-        assert!(preview.files.iter().any(|f| f.relative_path == "src/README.md"));
+        assert!(preview
+            .files
+            .iter()
+            .any(|f| f.relative_path == "src/README.md"));
     }
 
     /// REGRESSÃO (revisão adversarial): um NTFS hardlink (`std::fs::hard_link`, sem privilégio
@@ -494,10 +583,16 @@ mod tests {
             .find(|e| e.file_name() == "README.md")
             .map(|e| e.file_type().unwrap().is_symlink())
             .unwrap();
-        assert!(!entry_is_symlink, "premissa do teste furou: hardlink foi reportado como symlink");
+        assert!(
+            !entry_is_symlink,
+            "premissa do teste furou: hardlink foi reportado como symlink"
+        );
 
         let preview = scan_project(project.path().to_str().unwrap()).unwrap();
-        let leaked = preview.files.iter().find(|f| f.relative_path == "README.md");
+        let leaked = preview
+            .files
+            .iter()
+            .find(|f| f.relative_path == "README.md");
 
         assert!(
             leaked.is_none(),
@@ -514,7 +609,11 @@ mod tests {
         write_file(&dir.path().join("package.json"), "{}");
 
         let preview = scan_project(dir.path().to_str().unwrap()).unwrap();
-        let names: Vec<_> = preview.files.iter().map(|f| f.relative_path.as_str()).collect();
+        let names: Vec<_> = preview
+            .files
+            .iter()
+            .map(|f| f.relative_path.as_str())
+            .collect();
 
         assert_eq!(names.len(), 3);
         assert!(names.contains(&"CLAUDE.md"));

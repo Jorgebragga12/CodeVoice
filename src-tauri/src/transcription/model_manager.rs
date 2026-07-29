@@ -38,7 +38,8 @@ pub const MODELS: &[ModelInfo] = &[
         id: "large-v3-turbo-q5_0",
         label: "Large v3 Turbo quantizado (rápido, quase igual) — 574 MB",
         filename: "ggml-large-v3-turbo-q5_0.bin",
-        url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin",
+        url:
+            "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin",
         sha256: "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2",
         size_bytes: 574_041_195,
     },
@@ -160,14 +161,17 @@ pub fn download(
     on_progress(0);
 
     loop {
-        let n = response.read(&mut buf).map_err(|e| TranscribeError::Processing(e.to_string()))?;
+        let n = response
+            .read(&mut buf)
+            .map_err(|e| TranscribeError::Processing(e.to_string()))?;
         if n == 0 {
             break;
         }
-        out.write_all(&buf[..n]).map_err(|source| TranscribeError::Io {
-            path: part_path.display().to_string(),
-            source,
-        })?;
+        out.write_all(&buf[..n])
+            .map_err(|source| TranscribeError::Io {
+                path: part_path.display().to_string(),
+                source,
+            })?;
         downloaded += n as u64;
 
         let percent = ((downloaded.min(total) * 100) / total) as u8;

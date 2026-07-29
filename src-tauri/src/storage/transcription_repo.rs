@@ -77,8 +77,8 @@ impl TranscriptionRepo {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::storage::{test_pool, RecordingRepo};
     use crate::domain::NewRecording;
+    use crate::storage::{test_pool, RecordingRepo};
 
     fn a_recording(db: &super::super::TestDb) -> i32 {
         RecordingRepo::new(db.pool.clone())
@@ -114,7 +114,10 @@ mod tests {
         let created = repo.create(&sample(rec)).unwrap();
         assert!(created.id > 0);
         assert_eq!(created.text, "criar um botão de exportar");
-        assert_eq!(repo.get(created.id).unwrap().unwrap().model_name, "large-v3-turbo");
+        assert_eq!(
+            repo.get(created.id).unwrap().unwrap().model_name,
+            "large-v3-turbo"
+        );
     }
 
     #[test]
@@ -142,7 +145,8 @@ mod tests {
         let t = repo.create(&sample(rec)).unwrap();
 
         let conn = db.pool.get().unwrap();
-        conn.execute("DELETE FROM recordings WHERE id = ?1", params![rec]).unwrap();
+        conn.execute("DELETE FROM recordings WHERE id = ?1", params![rec])
+            .unwrap();
         drop(conn);
 
         // FK ON DELETE CASCADE: a transcrição some junto com a gravação.

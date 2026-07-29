@@ -172,7 +172,11 @@ mod tests {
         let fts: i64 = conn
             .query_row("SELECT COUNT(*) FROM history_fts", [], |r| r.get(0))
             .unwrap();
-        assert_eq!((history, fts), (1, 1), "histórico e índice de busca devem existir");
+        assert_eq!(
+            (history, fts),
+            (1, 1),
+            "histórico e índice de busca devem existir"
+        );
     }
 
     #[test]
@@ -203,7 +207,9 @@ mod tests {
             .create_with_history(&sample(tr), 5000, "criar tela de login", Some(rec))
             .unwrap();
 
-        let updated = repo.update_content(created.id, "# Editado pelo usuário").unwrap();
+        let updated = repo
+            .update_content(created.id, "# Editado pelo usuário")
+            .unwrap();
 
         assert_eq!(updated.content, "# Editado pelo usuário");
         assert_eq!(

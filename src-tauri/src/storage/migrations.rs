@@ -218,13 +218,20 @@ mod tests {
             "app_settings",
             "history_fts",
         ] {
-            assert!(tables.iter().any(|t| t == expected), "tabela {expected} não foi criada");
+            assert!(
+                tables.iter().any(|t| t == expected),
+                "tabela {expected} não foi criada"
+            );
         }
 
-        let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
+        let version: i64 = conn
+            .query_row("PRAGMA user_version", [], |r| r.get(0))
+            .unwrap();
         assert_eq!(version, 3);
 
-        let applied: i64 = conn.query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0)).unwrap();
+        let applied: i64 = conn
+            .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
+            .unwrap();
         assert_eq!(applied, 3);
     }
 
@@ -234,7 +241,9 @@ mod tests {
         apply_all(&mut conn).unwrap();
         apply_all(&mut conn).unwrap();
 
-        let applied: i64 = conn.query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0)).unwrap();
+        let applied: i64 = conn
+            .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
+            .unwrap();
         assert_eq!(applied, 3);
     }
 
@@ -253,13 +262,17 @@ mod tests {
 
         apply_all(&mut conn).unwrap();
 
-        let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
+        let version: i64 = conn
+            .query_row("PRAGMA user_version", [], |r| r.get(0))
+            .unwrap();
         assert_eq!(version, 3);
         assert!(table_names(&conn).iter().any(|t| t == "history_fts"));
     }
 
     fn column_names(conn: &Connection, table: &str) -> Vec<String> {
-        let mut stmt = conn.prepare(&format!("PRAGMA table_info({table})")).unwrap();
+        let mut stmt = conn
+            .prepare(&format!("PRAGMA table_info({table})"))
+            .unwrap();
         stmt.query_map([], |row| row.get::<_, String>(1))
             .unwrap()
             .map(|r| r.unwrap())
@@ -273,10 +286,15 @@ mod tests {
 
         let columns = column_names(&conn, "prompt_templates");
         for expected in ["category", "description", "source", "slug"] {
-            assert!(columns.iter().any(|c| c == expected), "faltou a coluna {expected}");
+            assert!(
+                columns.iter().any(|c| c == expected),
+                "faltou a coluna {expected}"
+            );
         }
         // A tabela auxiliar da recriação não pode sobrar.
-        assert!(!table_names(&conn).iter().any(|t| t == "prompt_templates_new"));
+        assert!(!table_names(&conn)
+            .iter()
+            .any(|t| t == "prompt_templates_new"));
     }
 
     #[test]
@@ -305,7 +323,10 @@ mod tests {
             })
             .unwrap();
         assert_eq!(name, "Antigo");
-        assert_eq!(source, "user", "modelo pré-existente é do usuário, não embutido");
+        assert_eq!(
+            source, "user",
+            "modelo pré-existente é do usuário, não embutido"
+        );
     }
 
     #[test]
@@ -317,7 +338,10 @@ mod tests {
             "INSERT INTO prompt_templates (name, mode, content) VALUES ('x', 'modo_inventado', 'y')",
             [],
         );
-        assert!(bad.is_err(), "o CHECK de mode precisa barrar modo fora dos 10");
+        assert!(
+            bad.is_err(),
+            "o CHECK de mode precisa barrar modo fora dos 10"
+        );
     }
 
     #[test]
@@ -328,7 +352,10 @@ mod tests {
         let insert = "INSERT INTO prompt_templates (name, mode, content, source, slug) \
                       VALUES ('x', 'quick', 'y', 'builtin', 'depuracao/erro-agora')";
         conn.execute(insert, []).unwrap();
-        assert!(conn.execute(insert, []).is_err(), "slug de builtin não pode duplicar");
+        assert!(
+            conn.execute(insert, []).is_err(),
+            "slug de builtin não pode duplicar"
+        );
 
         // O índice é parcial: modelos do usuário (slug NULL) podem coexistir sem limite.
         let user = "INSERT INTO prompt_templates (name, mode, content) VALUES ('u', 'quick', 'z')";

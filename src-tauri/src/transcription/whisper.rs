@@ -5,7 +5,7 @@ use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperContextPar
 use super::model_manager::{self, ModelInfo};
 use super::normalize::{normalize_peak, rms};
 use super::{
-    EngineStatus, ProgressSink, Transcript, TranscribeError, TranscribeOptions, TranscriptionEngine,
+    EngineStatus, ProgressSink, TranscribeError, TranscribeOptions, Transcript, TranscriptionEngine,
 };
 
 /// Abaixo deste RMS o áudio é tratado como silêncio e nem chega ao Whisper — que, sobre
@@ -32,7 +32,10 @@ pub struct WhisperEngine {
 
 impl WhisperEngine {
     pub fn new(app_data_dir: PathBuf, model: &'static ModelInfo) -> Self {
-        Self { app_data_dir, model }
+        Self {
+            app_data_dir,
+            model,
+        }
     }
 
     fn model_path(&self) -> PathBuf {
@@ -72,7 +75,10 @@ impl WhisperEngine {
         log::info!("transcrição: ganho de normalização aplicado = {gain:.1}x");
 
         let level = rms(&samples);
-        let f32_samples = samples.iter().map(|s| *s as f32 / i16::MAX as f32).collect();
+        let f32_samples = samples
+            .iter()
+            .map(|s| *s as f32 / i16::MAX as f32)
+            .collect();
         Ok((f32_samples, level))
     }
 }

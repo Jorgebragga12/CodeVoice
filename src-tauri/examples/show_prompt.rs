@@ -8,7 +8,9 @@ use codevoice_lib::domain::PromptMode;
 use codevoice_lib::promptgen::{templates, ProjectContext};
 
 fn main() {
-    let arg = std::env::args().nth(1).unwrap_or_else(|| "technical".into());
+    let arg = std::env::args()
+        .nth(1)
+        .unwrap_or_else(|| "technical".into());
     let mode = match arg.as_str() {
         "clean" => PromptMode::CleanTranscript,
         "quick" => PromptMode::Quick,

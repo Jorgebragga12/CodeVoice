@@ -18,7 +18,9 @@ use codevoice_lib::storage::{init_pool, ProjectRepo};
 #[test]
 fn registers_the_codevoice_repo_itself_via_the_assisted_import_pipeline() {
     let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let repo_root = manifest_dir.parent().expect("src-tauri deveria ter um diretório pai");
+    let repo_root = manifest_dir
+        .parent()
+        .expect("src-tauri deveria ter um diretório pai");
 
     // 1) Validação/canonicalização de path — o mesmo código que o command `create_project` usa.
     let canonical_root = path_validation::validate_project_root(repo_root.to_str().unwrap())
@@ -28,11 +30,24 @@ fn registers_the_codevoice_repo_itself_via_the_assisted_import_pipeline() {
     let preview = scanner::scan_project(canonical_root.to_str().unwrap())
         .expect("scan do próprio repositório não deveria falhar");
 
-    let file_names: Vec<_> = preview.files.iter().map(|f| f.relative_path.as_str()).collect();
-    assert!(file_names.contains(&"README.md"), "README.md deveria ter sido importado");
-    assert!(file_names.contains(&"package.json"), "package.json deveria ter sido importado");
+    let file_names: Vec<_> = preview
+        .files
+        .iter()
+        .map(|f| f.relative_path.as_str())
+        .collect();
     assert!(
-        !preview.directories.iter().any(|d| d.contains("node_modules")),
+        file_names.contains(&"README.md"),
+        "README.md deveria ter sido importado"
+    );
+    assert!(
+        file_names.contains(&"package.json"),
+        "package.json deveria ter sido importado"
+    );
+    assert!(
+        !preview
+            .directories
+            .iter()
+            .any(|d| d.contains("node_modules")),
         "node_modules nunca deveria aparecer na listagem de diretórios (denylist)"
     );
     assert!(
@@ -62,6 +77,9 @@ fn registers_the_codevoice_repo_itself_via_the_assisted_import_pipeline() {
 
     assert_eq!(created.path, canonical_root.display().to_string());
 
-    let fetched = repo.get(created.id).unwrap().expect("projeto recém-criado deveria existir");
+    let fetched = repo
+        .get(created.id)
+        .unwrap()
+        .expect("projeto recém-criado deveria existir");
     assert_eq!(fetched.name, "CodeVoice");
 }

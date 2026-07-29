@@ -65,7 +65,6 @@ impl Resampler {
             self.accumulated = 0;
         }
     }
-
 }
 
 // Nota: não existe `flush()` da janela parcial pendente ao encerrar. O resampler vive dentro do
@@ -161,7 +160,9 @@ mod tests {
         // Onda alternando +1/-1 a 48 kHz = 24 kHz, muito acima do Nyquist de 8 kHz do alvo.
         // Com decimação ingênua isso viraria um sinal forte "rebatido" (aliasing); com média
         // de janela tem que ser fortemente atenuado — é o ponto do filtro existir.
-        let input: Vec<f32> = (0..4_800).map(|i| if i % 2 == 0 { 1.0 } else { -1.0 }).collect();
+        let input: Vec<f32> = (0..4_800)
+            .map(|i| if i % 2 == 0 { 1.0 } else { -1.0 })
+            .collect();
         let out = run(48_000, &input);
         let peak = out.iter().map(|s| s.unsigned_abs()).max().unwrap_or(0);
         assert!(

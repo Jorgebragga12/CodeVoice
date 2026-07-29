@@ -59,7 +59,11 @@ pub fn list_template_categories(
     let categories = repo.categories().map_err(|e| e.to_string())?;
     Ok(categories
         .into_iter()
-        .map(|(id, count)| TemplateCategory { label: label_for(&id), id, count })
+        .map(|(id, count)| TemplateCategory {
+            label: label_for(&id),
+            id,
+            count,
+        })
         .collect())
 }
 
@@ -117,7 +121,8 @@ pub fn delete_prompt_template(
     repo: tauri::State<'_, PromptTemplateRepo>,
     template_id: i32,
 ) -> Result<(), String> {
-    repo.delete_user_template(template_id).map_err(|e| e.to_string())
+    repo.delete_user_template(template_id)
+        .map_err(|e| e.to_string())
 }
 
 /// Gera um prompt usando um modelo como base, em vez dos geradores do modo.
@@ -170,7 +175,10 @@ pub fn generate_prompt_from_template(
         )
         .map_err(|e| e.to_string())?;
 
-    Ok(GenerationResult { prompt: saved, fallback_reason: None })
+    Ok(GenerationResult {
+        prompt: saved,
+        fallback_reason: None,
+    })
 }
 
 #[cfg(test)]
@@ -179,8 +187,10 @@ mod tests {
 
     #[test]
     fn every_library_category_has_a_label() {
-        let mut categories: Vec<_> =
-            library::builtins().into_iter().map(|t| t.category).collect();
+        let mut categories: Vec<_> = library::builtins()
+            .into_iter()
+            .map(|t| t.category)
+            .collect();
         categories.sort();
         categories.dedup();
 

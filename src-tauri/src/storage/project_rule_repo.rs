@@ -41,13 +41,16 @@ impl ProjectRuleRepo {
         )?;
         let id = conn.last_insert_rowid() as i32;
         drop(conn);
-        self.get(id)?.ok_or_else(|| StorageError::NotFound(format!("project_rule {id}")))
+        self.get(id)?
+            .ok_or_else(|| StorageError::NotFound(format!("project_rule {id}")))
     }
 
     pub fn get(&self, id: i32) -> Result<Option<ProjectRule>, StorageError> {
         let conn = self.pool.get()?;
         let sql = format!("SELECT {SELECT_COLUMNS} FROM project_rules WHERE id = ?1");
-        conn.query_row(&sql, params![id], row_to_rule).optional().map_err(Into::into)
+        conn.query_row(&sql, params![id], row_to_rule)
+            .optional()
+            .map_err(Into::into)
     }
 
     pub fn list_for_project(&self, project_id: i32) -> Result<Vec<ProjectRule>, StorageError> {
@@ -58,19 +61,23 @@ impl ProjectRuleRepo {
         );
         let mut stmt = conn.prepare(&sql)?;
         let rows = stmt.query_map(params![project_id], row_to_rule)?;
-        rows.collect::<rusqlite::Result<Vec<_>>>().map_err(Into::into)
+        rows.collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(Into::into)
     }
 
     /// Atualiza o texto da regra. `sort_order` não é editável por aqui — usar [`Self::reorder`].
     pub fn update(&self, id: i32, input: &ProjectRuleUpdate) -> Result<ProjectRule, StorageError> {
         let conn = self.pool.get()?;
-        let changed =
-            conn.execute("UPDATE project_rules SET rule = ?1 WHERE id = ?2", params![input.rule, id])?;
+        let changed = conn.execute(
+            "UPDATE project_rules SET rule = ?1 WHERE id = ?2",
+            params![input.rule, id],
+        )?;
         if changed == 0 {
             return Err(StorageError::NotFound(format!("project_rule {id}")));
         }
         drop(conn);
-        self.get(id)?.ok_or_else(|| StorageError::NotFound(format!("project_rule {id}")))
+        self.get(id)?
+            .ok_or_else(|| StorageError::NotFound(format!("project_rule {id}")))
     }
 
     pub fn delete(&self, id: i32) -> Result<(), StorageError> {
@@ -129,10 +136,18 @@ mod tests {
         let rules = ProjectRuleRepo::new(db.pool.clone());
         let project_id = setup_project(&projects);
 
-        let first =
-            rules.create(&NewProjectRule { project_id, rule: "Nunca usar i64 em IDs".into() }).unwrap();
-        let second =
-            rules.create(&NewProjectRule { project_id, rule: "Sempre validar path".into() }).unwrap();
+        let first = rules
+            .create(&NewProjectRule {
+                project_id,
+                rule: "Nunca usar i64 em IDs".into(),
+            })
+            .unwrap();
+        let second = rules
+            .create(&NewProjectRule {
+                project_id,
+                rule: "Sempre validar path".into(),
+            })
+            .unwrap();
 
         assert_eq!(first.sort_order, 0);
         assert_eq!(second.sort_order, 1);
@@ -145,8 +160,18 @@ mod tests {
         let rules = ProjectRuleRepo::new(db.pool.clone());
         let project_id = setup_project(&projects);
 
-        rules.create(&NewProjectRule { project_id, rule: "regra A".into() }).unwrap();
-        rules.create(&NewProjectRule { project_id, rule: "regra B".into() }).unwrap();
+        rules
+            .create(&NewProjectRule {
+                project_id,
+                rule: "regra A".into(),
+            })
+            .unwrap();
+        rules
+            .create(&NewProjectRule {
+                project_id,
+                rule: "regra B".into(),
+            })
+            .unwrap();
 
         let listed = rules.list_for_project(project_id).unwrap();
         assert_eq!(listed.len(), 2);
@@ -161,9 +186,20 @@ mod tests {
         let rules = ProjectRuleRepo::new(db.pool.clone());
         let project_id = setup_project(&projects);
 
-        let created = rules.create(&NewProjectRule { project_id, rule: "original".into() }).unwrap();
-        let updated =
-            rules.update(created.id, &ProjectRuleUpdate { rule: "editada".into() }).unwrap();
+        let created = rules
+            .create(&NewProjectRule {
+                project_id,
+                rule: "original".into(),
+            })
+            .unwrap();
+        let updated = rules
+            .update(
+                created.id,
+                &ProjectRuleUpdate {
+                    rule: "editada".into(),
+                },
+            )
+            .unwrap();
 
         assert_eq!(updated.rule, "editada");
     }
@@ -184,7 +220,12 @@ mod tests {
         let rules = ProjectRuleRepo::new(db.pool.clone());
         let project_id = setup_project(&projects);
 
-        let created = rules.create(&NewProjectRule { project_id, rule: "efêmera".into() }).unwrap();
+        let created = rules
+            .create(&NewProjectRule {
+                project_id,
+                rule: "efêmera".into(),
+            })
+            .unwrap();
         rules.delete(created.id).unwrap();
 
         assert!(rules.get(created.id).unwrap().is_none());
@@ -197,9 +238,24 @@ mod tests {
         let rules = ProjectRuleRepo::new(db.pool.clone());
         let project_id = setup_project(&projects);
 
-        let a = rules.create(&NewProjectRule { project_id, rule: "A".into() }).unwrap();
-        let b = rules.create(&NewProjectRule { project_id, rule: "B".into() }).unwrap();
-        let c = rules.create(&NewProjectRule { project_id, rule: "C".into() }).unwrap();
+        let a = rules
+            .create(&NewProjectRule {
+                project_id,
+                rule: "A".into(),
+            })
+            .unwrap();
+        let b = rules
+            .create(&NewProjectRule {
+                project_id,
+                rule: "B".into(),
+            })
+            .unwrap();
+        let c = rules
+            .create(&NewProjectRule {
+                project_id,
+                rule: "C".into(),
+            })
+            .unwrap();
 
         rules.reorder(project_id, &[c.id, a.id, b.id]).unwrap();
 
@@ -214,7 +270,12 @@ mod tests {
         let projects = ProjectRepo::new(db.pool.clone());
         let rules = ProjectRuleRepo::new(db.pool.clone());
         let project_id = setup_project(&projects);
-        rules.create(&NewProjectRule { project_id, rule: "alguma regra".into() }).unwrap();
+        rules
+            .create(&NewProjectRule {
+                project_id,
+                rule: "alguma regra".into(),
+            })
+            .unwrap();
 
         projects.delete(project_id).unwrap();
 

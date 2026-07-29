@@ -14,7 +14,9 @@ fn main() {
 /// não muda entre execuções. `include_str!` resolve tudo em tempo de compilação, sem dependência
 /// nova e sem nenhum acesso a disco depois do build.
 fn embed_prompt_library() {
-    let templates_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("templates");
+    let templates_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("templates");
     println!("cargo:rerun-if-changed={}", templates_dir.display());
 
     let mut files = Vec::new();
@@ -29,8 +31,13 @@ fn embed_prompt_library() {
         // `rerun-if-changed` no diretório não detecta a edição de um arquivo já existente em
         // todos os sistemas; registrar cada arquivo garante o rebuild ao mexer num modelo.
         println!("cargo:rerun-if-changed={}", path.display());
-        writeln!(out, "    ({:?}, include_str!({:?})),", slug, path.display().to_string())
-            .expect("falha ao montar a lista de modelos embutidos");
+        writeln!(
+            out,
+            "    ({:?}, include_str!({:?})),",
+            slug,
+            path.display().to_string()
+        )
+        .expect("falha ao montar a lista de modelos embutidos");
     }
     out.push_str("];\n");
 
@@ -60,7 +67,10 @@ fn collect_markdown(root: &Path, dir: &Path, out: &mut Vec<(String, PathBuf)>) {
         let Ok(relative) = path.strip_prefix(root) else {
             continue;
         };
-        let slug = relative.with_extension("").to_string_lossy().replace('\\', "/");
+        let slug = relative
+            .with_extension("")
+            .to_string_lossy()
+            .replace('\\', "/");
         if !slug.contains('/') {
             continue; // arquivo solto na raiz (README.md) — não é modelo
         }

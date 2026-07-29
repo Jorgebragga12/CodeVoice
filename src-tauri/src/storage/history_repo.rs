@@ -106,17 +106,22 @@ impl HistoryRepo {
              ORDER BY ph.created_at DESC",
         )?;
         let rows = stmt.query_map(params![query], row_to_entry)?;
-        rows.collect::<rusqlite::Result<Vec<_>>>().map_err(Into::into)
+        rows.collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(Into::into)
     }
 
-    pub fn list_for_project(&self, project_id: i64) -> Result<Vec<PromptHistoryEntry>, StorageError> {
+    pub fn list_for_project(
+        &self,
+        project_id: i64,
+    ) -> Result<Vec<PromptHistoryEntry>, StorageError> {
         let conn = self.pool.get()?;
         let mut stmt = conn.prepare(
             "SELECT id, project_id, mode, favorite, audio_duration_ms, status, created_at \
              FROM prompt_history WHERE project_id = ?1 ORDER BY created_at DESC",
         )?;
         let rows = stmt.query_map(params![project_id], row_to_entry)?;
-        rows.collect::<rusqlite::Result<Vec<_>>>().map_err(Into::into)
+        rows.collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(Into::into)
     }
 }
 
@@ -151,14 +156,18 @@ mod tests {
         assert!(history_id > 0);
 
         let conn = db.pool.get().unwrap();
-        let recordings: i64 = conn.query_row("SELECT COUNT(*) FROM recordings", [], |r| r.get(0)).unwrap();
+        let recordings: i64 = conn
+            .query_row("SELECT COUNT(*) FROM recordings", [], |r| r.get(0))
+            .unwrap();
         let transcriptions: i64 = conn
             .query_row("SELECT COUNT(*) FROM transcriptions", [], |r| r.get(0))
             .unwrap();
         let prompts: i64 = conn
             .query_row("SELECT COUNT(*) FROM generated_prompts", [], |r| r.get(0))
             .unwrap();
-        let history: i64 = conn.query_row("SELECT COUNT(*) FROM prompt_history", [], |r| r.get(0)).unwrap();
+        let history: i64 = conn
+            .query_row("SELECT COUNT(*) FROM prompt_history", [], |r| r.get(0))
+            .unwrap();
 
         assert_eq!((recordings, transcriptions, prompts, history), (1, 1, 1, 1));
     }

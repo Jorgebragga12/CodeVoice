@@ -116,8 +116,10 @@ fn build_llm_prompt(input: &GenerationInput) -> String {
     out.push_str("\n\n");
 
     if !spec.sections.is_empty() {
-        out.push_str("Estruture a saída em markdown com estas seções (omita as que não se \
-                      aplicarem, NÃO invente conteúdo para preencher):\n");
+        out.push_str(
+            "Estruture a saída em markdown com estas seções (omita as que não se \
+                      aplicarem, NÃO invente conteúdo para preencher):\n",
+        );
         for section in spec.sections {
             out.push_str(&format!("- {}\n", section.title()));
         }
@@ -189,9 +191,7 @@ impl PromptGenerator for DefaultPromptGenerator {
                 Ok(GeneratedPromptText {
                     content: templates::generate(input.mode, &input.transcript, &input.project),
                     source: PromptSource::Template,
-                    fallback_reason: Some(format!(
-                        "Gerado por modelo local de template ({err})."
-                    )),
+                    fallback_reason: Some(format!("Gerado por modelo local de template ({err}).")),
                 })
             }
         }
@@ -231,7 +231,10 @@ mod tests {
             .generate(&input(PromptMode::CleanTranscript))
             .unwrap();
         assert_eq!(result.source, PromptSource::Template);
-        assert!(result.fallback_reason.is_none(), "não é fallback, é o caminho normal");
+        assert!(
+            result.fallback_reason.is_none(),
+            "não é fallback, é o caminho normal"
+        );
         assert!(!result.content.contains("##"));
     }
 
@@ -248,7 +251,10 @@ mod tests {
         let prompt = build_llm_prompt(&input(PromptMode::Technical));
         assert!(prompt.contains("Objetivo"));
         assert!(prompt.contains("Critérios de aceitação"));
-        assert!(prompt.contains("CodeVoice"), "contexto do projeto deveria estar presente");
+        assert!(
+            prompt.contains("CodeVoice"),
+            "contexto do projeto deveria estar presente"
+        );
         assert!(prompt.contains("Tauri, React"));
     }
 

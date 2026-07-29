@@ -141,7 +141,10 @@ mod tests {
     fn renders_rules_as_list() {
         let ctx = ProjectContext::from_project(
             &project(),
-            &[rule(1, "Sempre rodar lint"), rule(2, "Nunca commitar segredo")],
+            &[
+                rule(1, "Sempre rodar lint"),
+                rule(2, "Nunca commitar segredo"),
+            ],
         );
         let rules = ctx.render_rules();
         assert!(rules.contains("- Sempre rodar lint"));

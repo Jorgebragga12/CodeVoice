@@ -32,10 +32,11 @@ impl CaptureHandle {
         // Se a thread já morreu sozinha (erro no device, por ex.), o send falha — nesse caso o
         // resultado real do erro ainda vem pelo result_rx logo abaixo, então seguimos.
         let _ = self.command_tx.send(command);
-        let outcome = self
-            .result_rx
-            .recv()
-            .unwrap_or_else(|_| Err(AudioError::Stream("thread de captura encerrou sem resposta".into())));
+        let outcome = self.result_rx.recv().unwrap_or_else(|_| {
+            Err(AudioError::Stream(
+                "thread de captura encerrou sem resposta".into(),
+            ))
+        });
         let _ = self.thread.join();
         outcome
     }

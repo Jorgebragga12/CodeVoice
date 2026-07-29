@@ -151,7 +151,9 @@ fn transcribe_blocking(app: AppHandle, recording_id: i32) -> Result<Transcriptio
         .ok_or_else(|| "o áudio desta gravação não está mais disponível".to_string())?;
 
     let settings = app.state::<SettingsRepo>();
-    let recording_settings = settings.get_recording_settings().map_err(|e| e.to_string())?;
+    let recording_settings = settings
+        .get_recording_settings()
+        .map_err(|e| e.to_string())?;
     let model = resolve_model(&settings)?;
 
     let app_data = app.state::<AppDataDir>().0.clone();

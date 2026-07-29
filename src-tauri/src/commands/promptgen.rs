@@ -7,9 +7,7 @@ use crate::promptgen::{
     claude_cli, modes, DefaultPromptGenerator, GenerationInput, ProjectContext, PromptGenerator,
     RefineAction,
 };
-use crate::storage::{
-    ProjectRepo, ProjectRuleRepo, PromptRepo, RecordingRepo, TranscriptionRepo,
-};
+use crate::storage::{ProjectRepo, ProjectRuleRepo, PromptRepo, RecordingRepo, TranscriptionRepo};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct PromptModeOption {
@@ -53,12 +51,7 @@ pub(super) fn load_context(app: &AppHandle, project_id: Option<i32>) -> ProjectC
         return ProjectContext::default();
     };
 
-    let Some(project) = app
-        .state::<ProjectRepo>()
-        .get(project_id)
-        .ok()
-        .flatten()
-    else {
+    let Some(project) = app.state::<ProjectRepo>().get(project_id).ok().flatten() else {
         return ProjectContext::default();
     };
 
