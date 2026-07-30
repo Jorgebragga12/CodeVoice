@@ -108,6 +108,18 @@ describe("PromptPanel", () => {
     expect(await screen.findByText(/não foi encontrado/)).toBeInTheDocument();
   });
 
+  /** Garante que a disponibilidade do CLI chega até a barra de refino, não só até o aviso. */
+  it("passes the missing-CLI state down to the refine actions", async () => {
+    mocked.claudeCliAvailable.mockResolvedValue({ status: "ok", data: false });
+    mocked.generatePrompt.mockResolvedValue(promptResult());
+    withReadyTranscription();
+    render(<PromptPanel />);
+
+    await userEvent.click(await screen.findByText("Gerar prompt"));
+
+    expect(await screen.findByRole("button", { name: "Encurtar" })).toBeDisabled();
+  });
+
   it("surfaces generation errors instead of failing silently", async () => {
     mocked.generatePrompt.mockResolvedValue({ status: "error", error: "transcrição vazia" });
     withReadyTranscription();

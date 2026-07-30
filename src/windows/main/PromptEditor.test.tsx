@@ -106,8 +106,34 @@ describe("PromptEditor", () => {
   it("offers the four refine actions of the spec", () => {
     render(<PromptEditor />);
     for (const label of ["Encurtar", "Detalhar", "Mais técnico", "Dividir em etapas"]) {
-      expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: label })).toBeEnabled();
     }
+  });
+
+  /**
+   * Sem o `claude` CLI o refino não tem efeito nenhum — deixar os botões clicáveis prometeria
+   * algo que não acontece.
+   */
+  it("disables the refine actions when the claude CLI is missing", () => {
+    render(<PromptEditor cliAvailable={false} />);
+
+    for (const label of ["Encurtar", "Detalhar", "Mais técnico", "Dividir em etapas"]) {
+      const button = screen.getByRole("button", { name: label });
+      expect(button).toBeDisabled();
+      expect(button).toHaveAttribute("title", expect.stringContaining("Indisponível"));
+    }
+  });
+
+  /** Desfazer, copiar e salvar como modelo são locais: não podem cair junto com o CLI. */
+  it("keeps the local actions working without the claude CLI", async () => {
+    const user = userEvent.setup();
+    render(<PromptEditor cliAvailable={false} />);
+
+    await user.type(screen.getByLabelText("Prompt (editável)"), " extra");
+
+    expect(screen.getByRole("button", { name: "Copiar" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Salvar como modelo" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Voltar ao original" })).toBeEnabled();
   });
 
   /** O modelo é salvo a partir do banco: a edição pendente precisa ir antes do diálogo. */

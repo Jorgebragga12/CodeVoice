@@ -8,13 +8,21 @@ import { SaveAsTemplateDialog } from "./SaveAsTemplateDialog";
 /** Persistência automática da edição livre, para não depender de o usuário clicar em copiar. */
 const AUTOSAVE_MS = 1200;
 
+interface PromptEditorProps {
+  /**
+   * Disponibilidade do `claude` CLI, como o painel a descobriu. `null` = ainda carregando: as
+   * ações de refino ficam habilitadas para não piscarem de apagadas para acesas na abertura.
+   */
+  cliAvailable?: boolean | null;
+}
+
 /**
  * Editor da Fase 7 (PRODUCT-SPEC §5.5): transcrição original somente-leitura ao lado do prompt
  * editável, com refino, desfazer e "salvar como modelo".
  *
  * Copiar sempre persiste antes: o clipboard e `generated_prompts.content` não podem divergir.
  */
-export function PromptEditor() {
+export function PromptEditor({ cliAvailable = null }: PromptEditorProps) {
   const transcript = useTranscriptionStore((s) => s.text);
 
   const prompt = usePromptStore((s) => s.prompt);
@@ -102,6 +110,7 @@ export function PromptEditor() {
         busy={busy}
         canUndo={undoStack.length > 0}
         canRevert={content !== prompt.original_content}
+        refineAvailable={cliAvailable !== false}
         onRefine={(action: RefineAction) => void refine(action)}
         onUndo={undo}
         onRevert={revertToOriginal}

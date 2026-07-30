@@ -143,10 +143,10 @@ pelo seed do startup seguinte.
 - As melhorias sugeridas no handoff (detectar modo pela fala, anexar log ao prompt, favoritos)
   continuam **fora** de escopo, sem decisão tomada.
 
-## 8. Faxina do lado Rust (feita a pedido do Jorge, após a fase)
+## 8. Ajustes feitos a pedido do Jorge, após a fase
 
-Três problemas foram levantados ao fim da fase e resolvidos em seguida — nenhum deles é da Fase 7,
-mas todos travavam a ideia de "tudo verde de verdade":
+Três problemas de qualidade do lado Rust foram levantados ao fim da fase e resolvidos em seguida —
+nenhum deles é da Fase 7, mas todos travavam a ideia de "tudo verde de verdade":
 
 1. **`cargo clippy` não compilava.** `transcription/normalize.rs` (Fase 5) tinha
    `assert!(*s >= i16::MIN && *s <= i16::MAX)`, sempre verdadeiro para um `i16`; o lint
@@ -167,3 +167,17 @@ mas todos travavam a ideia de "tudo verde de verdade":
 
 De quebra, o **README** ainda dizia "Fase 0 (fundação) concluída — apenas documentação; nenhum
 código de aplicação ainda", o que era falso desde a Fase 1.
+
+**Refino desabilitado sem o CLI.** Depois de uma pergunta do Jorge sobre o quanto o app depende do
+Claude, ficou claro um problema de honestidade da interface: sem o `claude` no PATH, os 4 botões de
+refino apareciam clicáveis e não faziam nada além de emitir um aviso _depois_ do clique. Agora o
+painel repassa a disponibilidade do CLI para a `RefineToolbar`, que desabilita as 4 ações com um
+`title` explicando o motivo. Desfazer, voltar ao original, copiar e salvar como modelo continuam
+ativos — são locais e não têm por que cair junto. Enquanto a checagem ainda está carregando
+(`null`), os botões ficam habilitados, para não piscarem de apagados para acesos na abertura.
+
+Mapeando a dependência com precisão, já que a pergunta é recorrente: existe **um único** ponto que
+chama o CLI (`promptgen/mod.rs`, dentro de `DefaultPromptGenerator::generate`). Gravação,
+transcrição, modo "Transcrição limpa", a biblioteca de 117 modelos e todo o editor funcionam sem
+Claude. A geração nos outros 9 modos cai no template determinístico com aviso. **Só o refino exige
+o CLI de fato** — encurtar ou detalhar sem reescrever não tem equivalente determinístico.

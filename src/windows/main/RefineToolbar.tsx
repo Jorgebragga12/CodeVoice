@@ -19,11 +19,17 @@ const REFINE_ACTIONS: { action: RefineAction; label: string; title: string }[] =
   },
 ];
 
+/** Explica por que os botões estão apagados, no lugar da descrição da ação. */
+const UNAVAILABLE_TITLE =
+  "Indisponível: refinar exige o comando `claude`, que não foi encontrado no PATH";
+
 interface RefineToolbarProps {
   refining: RefineAction | null;
   busy: boolean;
   canUndo: boolean;
   canRevert: boolean;
+  /** `false` desabilita as 4 ações de refino — sem o `claude` CLI elas não têm efeito. */
+  refineAvailable: boolean;
   onRefine: (action: RefineAction) => void;
   onUndo: () => void;
   onRevert: () => void;
@@ -38,6 +44,7 @@ export function RefineToolbar({
   busy,
   canUndo,
   canRevert,
+  refineAvailable,
   onRefine,
   onUndo,
   onRevert,
@@ -48,8 +55,8 @@ export function RefineToolbar({
         <button
           key={action}
           type="button"
-          title={title}
-          disabled={busy}
+          title={refineAvailable ? title : UNAVAILABLE_TITLE}
+          disabled={busy || !refineAvailable}
           onClick={() => onRefine(action)}
           className="rounded bg-zinc-800 px-2.5 py-1 text-xs text-zinc-100 hover:bg-zinc-700 disabled:opacity-50"
         >

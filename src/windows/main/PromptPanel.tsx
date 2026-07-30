@@ -79,13 +79,14 @@ export function PromptPanel() {
       {cliAvailable === false && (
         <p className="text-xs text-amber-400">
           O comando <code>claude</code> não foi encontrado — os prompts serão montados por template
-          local, e as ações de refino não terão efeito.
+          local, e as ações de refino ficam desabilitadas. A aba <strong>Modelos</strong> continua
+          funcionando por inteiro: ela não depende de IA.
         </p>
       )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
-      <PromptEditor />
+      <PromptEditor cliAvailable={cliAvailable} />
     </div>
   );
 }
