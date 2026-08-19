@@ -2,4 +2,4 @@
 # Uso: git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 # chore(rust): aplica cargo fmt no src-tauri inteiro
-d477db080a4477dc6874e283d0e96a2522f793b2
+1df7510751e02a1ede39a48c68d90a3bc372d7d1
